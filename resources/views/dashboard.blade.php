@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<title>Amara &amp; Jonas · Invitation Suite</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+
+<!-- Vanilla DataTables Core -->
+<link href="https://cdn.jsdelivr.net/npm/vanilla-datatables@latest/dist/vanilla-dataTables.min.css" rel="stylesheet" type="text/css">
+<script src="https://cdn.jsdelivr.net/npm/vanilla-datatables@latest/dist/vanilla-dataTables.min.js" type="text/javascript"></script>
+
+<style>
+  :root{
+    --cream:#FAF6EE;
+    --card:#FFFFFF;
+    --champagne:#F1E3C6;
+    --champagne-deep:#E4CFA0;
+    --gold:#B4863A;
+    --gold-light:#D9B978;
+    --charcoal:#2A2521;
+    --charcoal-soft:#6B6258;
+    --muted:#A8A196;
+    --line:#EFE7D4;
+    --line-soft:#F3ECDA;
+    --green:#3E7A45; --green-bg:#E6F0E4;
+    --red:#B24B34; --red-bg:#F6E4E0;
+    --grey-bg:#EFEBE4;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    font-family:'Inter',sans-serif;
+    background:var(--cream);
+    color:var(--charcoal);
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,.serif{font-family:'Playfair Display',serif;}
+  a{text-decoration:none; color:inherit;}
+  button{font-family:inherit; cursor:pointer;}
+  input{font-family:inherit;}
+
+  .app{display:flex; min-height:100vh;}
+
+  /* ---------- Sidebar ---------- */
+  .sidebar{
+    width:240px; flex-shrink:0; height:100vh; position:sticky; top:0;
+    background:#FCFAF5; border-right:1px solid var(--line);
+    display:flex; flex-direction:column;
+  }
+  .brand{display:flex; align-items:center; gap:12px; padding:28px 24px 22px;}
+  .seal{
+    width:38px; height:38px; border-radius:50%; flex-shrink:0;
+    background:radial-gradient(circle at 32% 28%, var(--gold-light), var(--gold) 65%, #8a6526 100%);
+    box-shadow:0 3px 10px rgba(180,134,58,.45), inset 0 1px 1px rgba(255,255,255,.5);
+    display:flex; align-items:center; justify-content:center; color:#fff; font-size:15px;
+  }
+  .brand-name{font-size:16px; line-height:1.2;}
+  .brand-sub{font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin-top:2px;}
+  .divider{height:1px; background:var(--line); margin:0 24px;}
+  .nav{flex:1; padding:18px 16px; display:flex; flex-direction:column; gap:4px;}
+  .nav-item{
+    display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:12px;
+    font-size:13px; font-weight:500; color:var(--charcoal-soft); background:transparent;
+    border:none; width:100%; text-align:left; transition:all .18s ease; position:relative;
+  }
+  .nav-item i{width:17px; font-size:14px;}
+  .nav-item:hover{background:#F7F1E1;}
+  .nav-item.active{
+    background:linear-gradient(135deg,#F5EAD3,#F1E3C6); color:#7A5C28; font-weight:600;
+  }
+  .nav-item.active::after{
+    content:''; width:6px; height:6px; border-radius:50%; background:var(--gold);
+    position:absolute; right:12px;
+  }
+  .sidebar-foot{padding:16px;}
+  .profile{
+    display:flex; align-items:center; gap:10px; padding:10px 8px; border-radius:12px; cursor:pointer;
+    transition:background .18s ease;
+  }
+  .profile:hover{background:rgba(245,234,211,.5);}
+  .avatar{
+    width:36px; height:36px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(135deg,var(--gold-light),var(--gold)); color:#fff; font-size:13px; font-weight:600;
+  }
+  .profile-name{font-size:13px; font-weight:500;}
+  .profile-role{font-size:11px; color:var(--muted);}
+
+  /* ---------- Topbar ---------- */
+  .topbar{
+    position:sticky; top:0; z-index:30; display:flex; align-items:center; justify-content:space-between;
+    padding:16px 32px; background:rgba(250,246,238,.85); backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line); gap: 16px;
+  }
+  .topbar-left{display:flex; align-items:center; gap:12px;}
+  .menu-toggle{
+    display:none; width:36px; height:36px; border-radius:12px; background:#fff; 
+    border:1px solid var(--line); align-items:center; justify-content:center; color:var(--charcoal-soft);
+  }
+  .breadcrumb{font-size:13px; color:var(--muted); display:flex; align-items:center; gap:8px;}
+  .breadcrumb .current{color:var(--charcoal); font-weight:500;}
+  .topbar-right{display:flex; align-items:center; gap:14px;}
+  .search-box{
+    display:flex; align-items:center; gap:8px; padding:9px 14px; border-radius:12px;
+    background:#fff; border:1px solid var(--line); width:200px;
+  }
+  .search-box input{border:none; outline:none; background:transparent; font-size:13px; width:100%; color:var(--charcoal);}
+  .icon-btn{
+    width:36px; height:36px; border-radius:12px; background:#fff; border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center; position:relative;
+  }
+  .icon-btn .dot{
+    position:absolute; top:7px; right:7px; width:6px; height:6px; border-radius:50%; background:var(--gold);
+  }
+
+  /* ---------- Mobile Sidebar Backdrop ---------- */
+  .sidebar-backdrop {
+    display: none;
+    position: fixed; inset: 0; z-index: 55;
+    background: rgba(42,37,33,.3); backdrop-filter: blur(2px);
+  }
+  .sidebar-backdrop.active { display: block; }
+
+  /* ---------- Content ---------- */
+  .content{flex:1; min-width:0;}
+  .page{padding:32px; display:none; animation:fadein .3s ease;}
+  .page.active{display:block;}
+  @keyframes fadein{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);}}
+
+  .page-head{display:flex; align-items:flex-end; justify-content:space-between; gap:14px; flex-wrap:wrap; margin-bottom:24px;}
+  .eyebrow{font-size:11px; font-weight:600; letter-spacing:.18em; text-transform:uppercase; color:var(--gold); margin-bottom:6px;}
+  .page-title{font-size:26px; line-height:1;}
+
+  .btn{
+    display:inline-flex; align-items:center; gap:8px; padding:10px 16px; border-radius:12px;
+    font-size:13px; font-weight:500; border:none; transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .btn:active{transform:scale(.97);}
+  .btn-gold{
+    background:linear-gradient(135deg,var(--gold-light),var(--gold)); color:#fff;
+    box-shadow:0 4px 14px rgba(180,134,58,.35);
+  }
+  .btn-outline{background:#fff; color:var(--charcoal); border:1px solid var(--line);}
+  .btn-row{display:flex; gap:10px; flex-wrap:wrap;}
+
+  .card{
+    background:rgba(255,255,255,.9); border:1px solid var(--line); border-radius:20px;
+    box-shadow:0 1px 2px rgba(42,37,33,.04), 0 10px 30px -14px rgba(42,37,33,.10);
+  }
+
+  .pill{
+    font-size:11px; font-weight:500; letter-spacing:.02em; padding:5px 10px; border-radius:999px;
+    display:inline-flex; align-items:center; gap:4px;
+  }
+  .pill-gold{background:#F5EAD3; color:#8a6526;}
+  .pill-green{background:var(--green-bg); color:var(--green);}
+  .pill-red{background:var(--red-bg); color:var(--red);}
+  .pill-grey{background:var(--grey-bg); color:var(--charcoal-soft);}
+
+  /* ---------- Dashboard stats ---------- */
+  .stat-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:20px;}
+  .stat-card{padding:20px; position:relative; overflow:hidden; transition:transform .25s ease;}
+  .stat-card:hover{transform:translateY(-3px);}
+  .stat-glow{
+    position:absolute; top:-32px; right:-32px; width:110px; height:110px; border-radius:50%;
+    background:radial-gradient(circle, var(--gold-light), transparent 70%); opacity:.4; filter:blur(20px);
+  }
+  .stat-top{display:flex; align-items:flex-start; justify-content:space-between; position:relative;}
+  .stat-icon{
+    width:36px; height:36px; border-radius:12px; background:linear-gradient(135deg,#F5EAD3,#EAD9AF);
+    display:flex; align-items:center; justify-content:center; color:#8a6526; font-size:15px;
+  }
+  .stat-delta{display:flex; align-items:center; gap:4px; font-size:11px; font-weight:600; padding:5px 9px; border-radius:999px;}
+  .stat-delta.up{color:var(--green); background:var(--green-bg);}
+  .stat-delta.down{color:var(--red); background:var(--red-bg);}
+  .stat-value{font-size:26px; margin-top:14px; line-height:1;}
+  .stat-label{font-size:12.5px; color:#8a8377; margin-top:5px;}
+  .stat-chart{height:44px; margin-top:10px;}
+
+  .grid-2-1{display:grid; grid-template-columns:2fr 1fr; gap:20px; margin-top:20px;}
+  .panel{padding:24px;}
+  .panel-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;}
+  .panel-title{font-size:15px; font-weight:500;}
+  .panel-sub{font-size:12px; color:var(--muted); margin-top:2px;}
+
+  .sync-status-row{display:flex; align-items:center; gap:8px; margin-bottom:16px;}
+  .status-dot{width:8px; height:8px; border-radius:50%; background:var(--green);}
+  .kv{display:flex; justify-content:space-between; font-size:12.5px; padding:5px 0;}
+  .kv span:first-child{color:#8a8377;}
+
+  /* ---------- Guests page & Table UI overrides ---------- */
+  .toolbar{padding:16px; display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:20px;}
+  .filter-btn{
+    display:flex; align-items:center; gap:6px; padding:9px 14px; border-radius:12px; font-size:13px;
+    border:1px solid var(--line); background:#fff; color:var(--charcoal-soft);
+  }
+  
+  table{width:100%; border-collapse:collapse; font-size:13px;}
+  thead tr{background:var(--cream); border-bottom:1px solid var(--line);}
+  th{text-align:left; font-weight:500; padding:14px 20px; font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:#8a8377;}
+  td{padding:14px 20px; border-bottom:1px solid var(--line-soft); color:var(--charcoal-soft); vertical-align: middle;}
+  tbody tr{cursor:pointer; transition:background .15s ease;}
+  tbody tr:hover{background:#FBF7EE;}
+  tbody tr:last-child td{border-bottom:none;}
+  .guest-name{font-weight:500; color:var(--charcoal);}
+  .row-actions{display:flex; gap:6px;}
+  .row-actions button{
+    width:28px; height:28px; border-radius:8px; border:none; background:transparent; color:#8a8377;
+    display:flex; align-items:center; justify-content:center; transition:background .15s ease;
+  }
+  .row-actions button:hover{background:#F5EAD3;}
+
+  /* ---------- Vanilla DataTables UI Refinements ---------- */
+  .dataTable-wrapper .dataTable-top, 
+  .dataTable-wrapper .dataTable-bottom {
+    padding: 16px 20px;
+    font-size: 13px;
+    color: var(--charcoal-soft);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .dataTable-wrapper .dataTable-top { border-bottom: 1px solid var(--line-soft); }
+  .dataTable-wrapper .dataTable-bottom { border-top: 1px solid var(--line-soft); }
+  
+  /* Hide native library layouts that duplicate custom layout wrappers */
+  .dataTable-search { display: none !important; } 
+
+  .dataTable-input {
+    padding: 8px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    outline: none;
+    background: #fff;
+    font-size: 13px;
+  }
+  .dataTable-selector {
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: #fff;
+    margin-right: 6px;
+    outline: none;
+  }
+  .dataTable-pagination ul { display: flex; list-style: none; gap: 4px; }
+  .dataTable-pagination a {
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    transition: all 0.2s;
+    color: var(--charcoal-soft);
+    font-weight: 500;
+  }
+  .dataTable-pagination .active a {
+    background: linear-gradient(135deg,var(--gold-light),var(--gold)) !important;
+    color: white !important;
+  }
+  .dataTable-pagination a:hover:not(.active a) { background: var(--line-soft); }
+
+  /* ---------- Drawer ---------- */
+  .drawer-overlay{position:fixed; inset:0; z-index:50; display:none;}
+  .drawer-overlay.open{display:block;}
+  .drawer-bg{position:absolute; inset:0; background:rgba(42,37,33,.3); backdrop-filter:blur(2px);}
+  .drawer{
+    position:absolute; right:0; top:0; width:400px; height:100%; background:#fff; padding:28px;
+    overflow-y:auto; box-shadow:-20px 0 50px -20px rgba(42,37,33,.3);
+    animation:slidein .3s ease;
+  }
+  @keyframes slidein{from{transform:translateX(24px); opacity:0;} to{transform:translateX(0); opacity:1;}}
+  .drawer-close{
+    position:absolute; top:24px; right:24px; width:32px; height:32px; border-radius:50%;
+    background:var(--cream); border:none; display:flex; align-items:center; justify-content:center; color:var(--charcoal-soft);
+  }
+  .drawer-avatar{
+    width:64px; height:64px; border-radius:16px; display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(135deg,var(--gold-light),var(--gold)); color:#fff; font-size:20px; font-weight:600; margin-bottom:16px;
+  }
+  .drawer-name{font-size:22px;}
+  .drawer-meta{font-size:13px; color:var(--muted); margin-top:4px;}
+  .pill-row{display:flex; gap:8px; margin-top:12px;}
+  .qr-box{
+    margin-top:24px; padding:16px; border-radius:16px; background:var(--cream); border:1px solid var(--line);
+    display:flex; align-items:center; gap:16px;
+  }
+  .qr-square{width:80px; height:80px; border-radius:12px; background:#fff; border:1px solid var(--line); display:flex; align-items:center; justify-content:center; font-size:38px; color:var(--charcoal); flex-shrink:0;}
+  .qr-label{font-size:12px; color:#8a8377;}
+  .qr-link{font-size:12.5px; font-weight:500; margin-top:3px; color:var(--charcoal); word-break:break-all;}
+  .copy-link{display:flex; align-items:center; gap:5px; font-size:11.5px; font-weight:500; color:var(--gold); background:none; border:none; margin-top:8px; padding:0;}
+
+  .timeline{margin-top:24px;}
+  .timeline-title{font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing biographical.06em; color:var(--muted); margin-bottom:14px;}
+  .tl-item{display:flex; gap:12px; padding-bottom:16px;}
+  .tl-item:last-child{padding-bottom:0;}
+  .tl-dotcol{display:flex; flex-direction:column; align-items:center;}
+  .tl-dot{width:8px; height:8px; border-radius:50%; background:var(--gold); margin-top:6px;}
+  .tl-line{width:1px; flex:1; background:var(--line); margin-top:4px;}
+  .tl-text{font-size:13px; color:var(--charcoal);}
+  .tl-date{font-size:11.5px; color:var(--muted); margin-top:2px;}
+
+  .drawer-actions{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:24px;}
+  .drawer-actions .btn{justify-content:center; width:100%;}
+
+  /* ---------- Sync page ---------- */
+  .sync-head{display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px;}
+  .sync-title-row{display:flex; align-items:center; gap:14px;}
+  .sync-badge{
+    display:flex; align-items:center; gap:8px; padding:7px 14px; border-radius:999px; background:var(--green-bg);
+    color:var(--green); font-size:12.5px; font-weight:500;
+  }
+  .sync-stats{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:24px 0;}
+  .sync-stat{padding:16px; border-radius:16px; background:var(--cream); border:1px solid var(--line);}
+  .sync-stat-label{font-size:11.5px; color:var(--muted);}
+  .sync-stat-value{font-size:19px; margin-top:4px;}
+  .history-row{display:flex; align-items:center; gap:16px; padding:16px 0; border-bottom:1px solid var(--line-soft);}
+  .history-row:last-child{border-bottom:none;}
+  .history-icon{width:36px; height:36px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center;}
+  .history-time{width:150px; font-size:13px; color:var(--charcoal); flex-shrink:0;}
+  .history-pills{display:flex; gap:8px; flex-wrap:wrap;}
+
+  /* ---------- Invitations ---------- */
+  .template-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:20px;}
+  .template-card{overflow:hidden; transition:transform .25s ease;}
+  .template-card:hover{transform:translateY(-4px);}
+  .template-cover{height:150px; position:relative; display:flex; align-items:flex-end; padding:14px;}
+  .template-cover i{position:absolute; top:14px; right:14px; opacity:.4; color:#fff; font-size:16px;}
+  .template-cover-name{color:#fff; font-size:13.5px;}
+  .template-body{padding:16px;}
+  .template-meta{display:flex; justify-content:space-between; font-size:11.5px; color:var(--muted);}
+  .template-btns{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:14px;}
+  .tpl-btn{font-size:12px; font-weight:500; padding:8px 0; border-radius:8px; border:1px solid var(--line); background:#fff; color:var(--charcoal-soft);}
+  .tpl-btn.activate{background:var(--gold); color:#fff; border:none;}
+
+  /* ---------- RSVP ---------- */
+  .rsvp-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:20px; margin-bottom:20px;}
+  .rsvp-card{padding:20px;}
+  .rsvp-value{font-size:24px; margin-top:6px;}
+  .rsvp-bar{height:6px; border-radius:999px; background:#F1E9D6; margin-top:12px; overflow:hidden;}
+  .rsvp-bar-fill{height:100%; border-radius:999px;}
+  .rsvp-charts{display:grid; grid-template-columns:1fr 2fr; gap:20px; margin-bottom:20px;}
+
+  /* ---------- Analytics ---------- */
+  .analytics-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:20px;}
+  .mini-card{padding:20px;}
+  .mini-title{font-size:12px; color:var(--muted);}
+  .mini-value{font-size:20px; margin-top:5px;}
+  .mini-chart{height:44px; margin-top:8px;}
+
+  /* ---------- Settings ---------- */
+  .settings-grid{display:grid; grid-template-columns:1fr 1fr; gap:20px;}
+  .settings-group{padding:24px;}
+  .settings-group-title{font-size:14.5px; font-weight:500; margin-bottom:16px;}
+  .field{margin-bottom:14px;}
+  .field:last-child{margin-bottom:0;}
+  .field-label{font-size:12px; color:#8a8377; margin-bottom:6px;}
+  .field input{
+    width:100%; padding:10px 14px; border-radius:12px; font-size:13px; outline:none;
+    background:var(--cream); border:1px solid var(--line); color:var(--charcoal);
+  }
+  .toggle-row{display:flex; align-items:center; justify-content:space-between; padding:6px 0;}
+  .toggle-label{font-size:13px;}
+  .switch{width:38px; height:22px; border-radius:999px; padding:2px; display:flex; cursor:pointer; transition:background .2s;}
+  .switch.on{background:var(--gold); justify-content:flex-end;}
+  .switch.off{background:#E9DFC8; justify-content:flex-start;}
+  .switch-knob{width:18px; height:18px; border-radius:50%; background:#fff;}
+  .swatches{display:flex; gap:8px;}
+  .swatch{width:24px; height:24px; border-radius:50%; border:2px solid #fff; box-shadow:0 0 0 1px var(--line);}
+
+  /* ---------- Empty state ---------- */
+  .empty-state{padding:70px 20px; display:flex; flex-direction:column; align-items:center; text-align:center;}
+  .empty-icon{color:var(--gold); font-size:26px; margin-bottom:14px;}
+  .empty-title{font-size:15px; font-weight:500;}
+  .empty-sub{font-size:13px; color:var(--muted); margin-top:4px;}
+
+  /* ---------- Toast ---------- */
+  .toast{
+    position:fixed; bottom:24px; right:24px; z-index:80; display:none; gap:12px; align-items:center;
+    padding:14px 18px; border-radius:16px; background:#fff; border:1px solid var(--line);
+    box-shadow:0 12px 32px -8px rgba(42,37,33,.25); animation:fadein .25s ease;
+  }
+  .toast.show{display:flex;}
+  .toast-icon{width:32px; height:32px; border-radius:50%; background:#F5EAD3; color:var(--gold); display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+  .toast-title{font-size:13px; font-weight:500;}
+  .toast-body{font-size:12px; color:var(--muted);}
+
+  @media (max-width:1000px){
+    .stat-grid, .grid-2-1, .settings-grid, .template-grid, .analytics-grid, .rsvp-grid, .rsvp-charts{grid-template-columns:1fr 1fr;}
+    .sidebar{
+      position:fixed; z-index:60; transform:translateX(-100%); transition:transform .25s ease;
+      box-shadow: 20px 0 40px rgba(0,0,0,0.1);
+    }
+    .sidebar.open{transform:translateX(0);}
+    .menu-toggle{display:flex;}
+    .topbar{padding: 16px 20px;}
+    .page{padding: 20px;}
+    .drawer{width: 100%; max-width: 400px;}
+  }
+  @media (max-width:600px){
+    .stat-grid, .grid-2-1, .settings-grid, .template-grid, .analytics-grid, .rsvp-grid, .rsvp-charts{grid-template-columns:1fr;}
+    .topbar-right .search-box{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleMobileSidebar()"></div>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="seal"><i class="fa-solid fa-sparkles"></i></div>
+      <div>
+        <div class="brand-name serif">Amara &amp; Jonas</div>
+        <div class="brand-sub">Invitation Suite</div>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <nav class="nav" id="nav">
+      <button class="nav-item active" data-page="dashboard"><i class="fa-solid fa-grid-2"></i><span>Dashboard</span></button>
+      <button class="nav-item" data-page="guests"><i class="fa-solid fa-users"></i><span>Guests</span></button>
+      <button class="nav-item" data-page="sync"><i class="fa-solid fa-arrows-rotate"></i><span>Google Sheet Sync</span></button>
+      <button class="nav-item" data-page="invitations"><i class="fa-solid fa-envelope-open-text"></i><span>Invitations</span></button>
+      <button class="nav-item" data-page="rsvp"><i class="fa-solid fa-clipboard-check"></i><span>RSVP Responses</span></button>
+      <button class="nav-item" data-page="messages"><i class="fa-solid fa-message"></i><span>Messages</span></button>
+      <button class="nav-item" data-page="analytics"><i class="fa-solid fa-chart-simple"></i><span>Analytics</span></button>
+      <button class="nav-item" data-page="settings"><i class="fa-solid fa-gear"></i><span>Settings</span></button>
+    </nav>
+    <div class="divider"></div>
+    <div class="sidebar-foot">
+      <div class="profile">
+        <div class="avatar">NR</div>
+        <div style="flex:1; min-width:0;">
+          <div class="profile-name">Nadia Rahim</div>
+          <div class="profile-role">Administrator</div>
+        </div>
+        <i class="fa-solid fa-arrow-right-from-bracket" style="color:var(--muted); font-size:14px;"></i>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT AREA -->
+  <div class="content">
+    <div class="topbar">
+      <div class="topbar-left">
+        <button class="menu-toggle" onclick="toggleMobileSidebar()"><i class="fa-solid fa-bars"></i></button>
+        <div class="breadcrumb"><span>Wedding Suite</span><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i><span class="current" id="crumb">Dashboard</span></div>
+      </div>
+      <div class="topbar-right">
+        <div class="search-box"><i class="fa-solid fa-magnifying-glass" style="color:var(--muted); font-size:13px;"></i><input placeholder="Search anything…"/></div>
+        <button class="icon-btn"><i class="fa-regular fa-bell" style="color:var(--charcoal-soft);"></i><span class="dot"></span></button>
+      </div>
+    </div>
+
+    <!-- ============ DASHBOARD ============ -->
+    <section class="page active" id="page-dashboard">
+      <div class="page-head">
+        <div>
+          <div class="eyebrow">Overview</div>
+          <h1 class="page-title">Good afternoon, Nadia</h1>
+        </div>
+        <button class="btn btn-gold" onclick="notify('Guest added','The new guest was saved to your list.')"><i class="fa-solid fa-plus"></i>Add Guest</button>
+      </div>
+
+      <div class="stat-grid" id="statGrid"></div>
+
+      <div class="grid-2-1">
+        <div class="card panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title">RSVP Momentum</div>
+              <div class="panel-sub">Responses collected over the last 10 days</div>
+            </div>
+            <span class="pill pill-gold">Live</span>
+          </div>
+          <canvas id="rsvpMomentum" height="90"></canvas>
+        </div>
+
+        <div class="card panel">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:2px;">
+            <i class="fa-solid fa-arrows-rotate" style="color:var(--gold); font-size:14px;"></i>
+            <div class="panel-title">Sheet Sync</div>
+          </div>
+          <div class="panel-sub" style="margin-bottom:16px;">Wedding Guest List · Guests tab</div>
+          <div class="sync-status-row"><span class="status-dot"></span><span style="font-size:13px; font-weight:500;">Connected</span></div>
+          <div class="kv"><span>Rows in sheet</span><span style="color:var(--charcoal);" class="sh"></span></div>
+          <div class="kv"><span>Rows in database</span><span style="color:var(--charcoal);" class="db">{{ $stats['totalGuests'] }}</span></div>
+          <div class="kv"><span>Last sync</span><span style="color:var(--charcoal);" class="last">Today, 10:45 AM</span></div>
+          <button class="btn btn-gold" style="width:100%; justify-content:center; margin-top:16px;" onclick="fetchGuestsFromPublishedSheet()"><i class="fa-solid fa-arrows-rotate"></i>Sync Now</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ GUESTS ============ -->
+    <section class="page" id="page-guests">
+      <div class="page-head">
+        <div>
+          <div class="eyebrow">Guest List</div>
+          <h1 class="page-title" class="class">{{ $stats['totalGuests'] }} guests, one beautiful day</h1>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-outline"><i class="fa-solid fa-download"></i>Export Excel</button>
+          <button class="btn btn-gold"><i class="fa-solid fa-plus"></i>Add Guest</button>
+        </div>
+      </div>
+
+      <div class="card toolbar">
+        <div class="search-box" style="flex:1; min-width:220px;">
+          <i class="fa-solid fa-magnifying-glass" style="color:var(--muted); font-size:13px;"></i>
+          <input id="guestSearch" placeholder="Search guests by name…" oninput="filterGuests()"/>
+        </div>
+        <button class="filter-btn"><i class="fa-solid fa-filter"></i>Side</button>
+        <button class="filter-btn"><i class="fa-solid fa-filter"></i>RSVP</button>
+        <button class="filter-btn"><i class="fa-solid fa-filter"></i>Invitation Status</button>
+      </div>
+
+      <div class="card" style="overflow:hidden;">
+        <table id="guestsTable">
+          <thead>
+            <tr>
+              <th>Guest ID</th>
+              <th>Guest Name</th>
+              <th>Phone Number</th>
+              <th>Side</th>
+              <th>Invitation</th>
+              <th>RSVP</th>
+              <th>Date Invited</th>
+              <th data-sortable="false">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="guestTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ GOOGLE SHEET SYNC ============ -->
+    <section class="page" id="page-sync">
+      <div class="page-head"><div><div class="eyebrow">Integrations</div><h1 class="page-title">Google Sheet Synchronization</h1></div></div>
+
+      <div class="card panel" style="margin-bottom:24px;">
+        <div class="sync-head">
+          <div class="sync-title-row">
+            <div class="stat-icon" style="width:48px; height:48px; border-radius:16px; font-size:19px;"><i class="fa-solid fa-arrows-rotate"></i></div>
+            <div>
+              <div class="panel-title">Wedding Guest List</div>
+              <div class="panel-sub">Worksheet · Guests</div>
+            </div>
+          </div>
+          <div class="sync-badge"><span class="status-dot"></span>Connected</div>
+        </div>
+
+        <div class="sync-stats">
+          <div class="sync-stat"><div class="sync-stat-label">Rows in Google Sheet</div><div class="sync-stat-value serif">520</div></div>
+          <div class="sync-stat"><div class="sync-stat-label">Rows in Database</div><div class="sync-stat-value serif">520</div></div>
+          <div class="sync-stat"><div class="sync-stat-label">Last Sync</div><div class="sync-stat-value serif">Today, 10:45 AM</div></div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-gold" onclick="fetchGuestsFromPublishedSheet()"><i class="fa-solid fa-arrows-rotate"></i>Sync Now</button>
+          <button class="btn btn-outline"><i class="fa-solid fa-arrow-up-right-from-square"></i>Open Google Sheet</button>
+          <button class="btn btn-outline"><i class="fa-solid fa-rotate-right"></i>Refresh</button>
+        </div>
+      </div>
+
+      <div class="card panel">
+        <div class="panel-title" style="margin-bottom:6px;">Synchronization History</div>
+        <div id="syncHistory"></div>
+      </div>
+    </section>
+
+    <!-- ============ INVITATIONS ============ -->
+    <section class="page" id="page-invitations">
+      <div class="page-head">
+        <div><div class="eyebrow">Templates</div><h1 class="page-title">Invitation Designs</h1></div>
+        <button class="btn btn-gold"><i class="fa-solid fa-plus"></i>Create New Invitation</button>
+      </div>
+      <div class="template-grid" id="templateGrid"></div>
+    </section>
+
+    <!-- ============ RSVP ============ -->
+    <section class="page" id="page-rsvp">
+      <div class="page-head"><div><div class="eyebrow">Responses</div><h1 class="page-title">RSVP Dashboard</h1></div></div>
+
+      <div class="rsvp-grid" id="rsvpGrid"></div>
+
+      <div class="rsvp-charts">
+        <div class="card panel">
+          <div class="panel-title" style="margin-bottom:16px;">Response Breakdown</div>
+          <canvas id="rsvpPie" height="200"></canvas>
+        </div>
+        <div class="card panel">
+          <div class="panel-title" style="margin-bottom:16px;">Daily RSVP Activity</div>
+          <canvas id="rsvpDaily" height="200"></canvas>
+        </div>
+      </div>
+
+      <div class="card" style="overflow:hidden;">
+        <div class="panel-title" style="padding:20px 24px 4px 24px;">Recent Responses</div>
+        <table id="rsvpTable">
+          <thead>
+            <tr>
+              <th>Guest Name</th>
+              <th>Side</th>
+              <th>Status</th>
+              <th style="text-align:right;">Response Date</th>
+            </tr>
+          </thead>
+          <tbody id="rsvpTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ MESSAGES ============ -->
+    <section class="page" id="page-messages">
+      <div class="page-head"><div><div class="eyebrow">Inbox</div><h1 class="page-title">Messages</h1></div></div>
+      <div class="card empty-state">
+        <i class="fa-regular fa-message empty-icon"></i>
+        <div class="empty-title">No conversations yet</div>
+        <div class="empty-sub">Guest replies to your invitations will appear here.</div>
+      </div>
+    </section>
+
+    <!-- ============ ANALYTICS ============ -->
+    <section class="page" id="page-analytics">
+      <div class="page-head"><div><div class="eyebrow">Insights</div><h1 class="page-title">Analytics</h1></div></div>
+      <div class="analytics-grid" id="analyticsGrid"></div>
+    </section>
+
+    <!-- ============ SETTINGS ============ -->
+    <section class="page" id="page-settings">
+      <div class="page-head"><div><div class="eyebrow">Configuration</div><h1 class="page-title">Settings</h1></div></div>
+      <div class="settings-grid">
+        <div class="card settings-group">
+          <div class="settings-group-title">Wedding Information</div>
+          <div class="field"><div class="field-label">Bride Name</div><input value="Amara Whitfield"/></div>
+          <div class="field"><div class="field-label">Groom Name</div><input value="Jonas Mwakalinga"/></div>
+          <div class="field"><div class="field-label">Wedding Date</div><input value="14 August 2026"/></div>
+          <div class="field"><div class="field-label">Venue</div><input value="Serengeti Garden Estate, Mwanza"/></div>
+        </div>
+        <div class="card settings-group">
+          <div class="settings-group-title">Google Sheet Integration</div>
+          <div class="field"><div class="field-label">Google Spreadsheet ID</div><input value="1FZk3-xxxxxxxxxxxxxxxxx"/></div>
+          <div class="field"><div class="field-label">Worksheet Name</div><input value="Guests"/></div>
+          <div class="field"><div class="field-label">Google Service Account</div><input value="sync@wedsuite.iam.gserviceaccount.com"/></div>
+          <div class="field"><div class="field-label">Sync Interval</div><input value="Every 30 minutes"/></div>
+        </div>
+        <div class="card settings-group">
+          <div class="settings-group-title">Notifications</div>
+          <div class="toggle-row"><span class="toggle-label">WhatsApp Integration</span><div class="switch on" onclick="toggleSwitch(this)"><div class="switch-knob"></div></div></div>
+          <div class="toggle-row"><span class="toggle-label">Email Settings</span><div class="switch on" onclick="toggleSwitch(this)"><div class="switch-knob"></div></div></div>
+          <div class="toggle-row"><span class="toggle-label">Enable Guest QR Code</span><div class="switch on" onclick="toggleSwitch(this)"><div class="switch-knob"></div></div></div>
+        </div>
+        <div class="card settings-group">
+          <div class="settings-group-title">Theme Customization</div>
+          <div class="toggle-row">
+            <span class="toggle-label">Accent Color</span>
+            <div class="swatches">
+              <div class="swatch" style="background:#B4863A;"></div>
+              <div class="swatch" style="background:#C97C5D;"></div>
+              <div class="swatch" style="background:#8C8377;"></div>
+              <div class="swatch" style="background:#2A2521;"></div>
+            </div>
+          </div>
+          <div class="field" style="margin-top:14px;"><div class="field-label">Typography</div><input value="Playfair Display / Inter"/></div>
+          <div class="toggle-row"><span class="toggle-label">Enable Countdown</span><div class="switch on" onclick="toggleSwitch(this)"><div class="switch-knob"></div></div></div>
+          <div class="toggle-row"><span class="toggle-label">Enable Maps</span><div class="switch off" onclick="toggleSwitch(this)"><div class="switch-knob"></div></div></div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- PROFILE DRAWER OVERLAY -->
+<div class="drawer-overlay" id="drawerOverlay">
+  <div class="drawer-bg" onclick="closeDrawer()"></div>
+  <div class="drawer">
+    <button class="drawer-close" onclick="closeDrawer()"><i class="fa-solid fa-xmark"></i></button>
+    <div class="drawer-avatar" id="drawerAvatar">AW</div>
+    <div class="drawer-name serif" id="drawerName">Amara Whitfield</div>
+    <div class="drawer-meta" id="drawerMeta">+255 712 334 210 · G-0142</div>
+    <div class="pill-row" id="drawerPills"></div>
+
+    <div class="qr-box">
+      <div class="qr-square"><i class="fa-solid fa-qrcode"></i></div>
+      <div style="flex:1; min-width:0;">
+        <div class="qr-label">Unique invitation link</div>
+        <div class="qr-link" id="drawerLink">wedsuite.app/amara-jonas/g-0142</div>
+        <button class="copy-link"><i class="fa-solid fa-copy"></i>Copy link</button>
+      </div>
+    </div>
+
+    <div class="timeline">
+      <div class="timeline-title">Timeline</div>
+      <div class="tl-item">
+        <div class="tl-dotcol"><span class="tl-dot"></span><span class="tl-line"></span></div>
+        <div><div class="tl-text">Invitation sent via WhatsApp</div><div class="tl-date">12 Jun, 4:02 PM</div></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dotcol"><span class="tl-dot"></span><span class="tl-line"></span></div>
+        <div><div class="tl-text">Invitation viewed</div><div class="tl-date">12 Jun, 6:40 PM</div></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dotcol"><span class="tl-dot"></span></div>
+        <div><div class="tl-text">RSVP submitted</div><div class="tl-date">13 Jun, 9:15 AM</div></div>
+      </div>
+    </div>
+
+    <div class="drawer-actions">
+      <button class="btn btn-gold"><i class="fa-solid fa-paper-plane"></i>Send Again</button>
+      <button class="btn btn-outline"><i class="fa-solid fa-pen"></i>Edit</button>
+      <button class="btn btn-outline"><i class="fa-solid fa-link"></i>Copy Link</button>
+      <button class="btn btn-outline"><i class="fa-solid fa-download"></i>Download QR</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <div class="toast-icon"><i class="fa-solid fa-circle-check"></i></div>
+  <div><div class="toast-title" id="toastTitle">Title</div><div class="toast-body" id="toastBody">Body</div></div>
+</div>
+
+<script>
+/* ---------------- Navigation Engine ---------------- */
+document.querySelectorAll(".nav-item").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    document.querySelectorAll(".nav-item").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+    document.getElementById(`page-${btn.dataset.page}`).classList.add("active");
+    document.getElementById("crumb").textContent = btn.querySelector("span").textContent;
+    
+    if(window.innerWidth <= 1000) {
+      toggleMobileSidebar();
+    }
+  });
+});
+
+function toggleMobileSidebar() {
+  document.getElementById("sidebar").classList.toggle("open");
+  document.getElementById("sidebarBackdrop").classList.toggle("active");
+}
+
+/* ---------------- CSV Parser & Google Sheets Sync Engine ---------------- */
+const PUBLISHED_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTnZ2x_0RY84rQCBh0370B2FLYKvJ3Yi38Ae_eaReMOu-y4sMDvpW5IFwjSBrjc3vif4SGlGq_zLi5S/pub?gid=1493156283&single=true&output=csv';
+let GUESTS = [];
+let guestsDataTableInstance = null;
+let rsvpDataTableInstance = null;
+
+async function fetchGuestsFromPublishedSheet() {
+  try {
+    const response = await fetch(PUBLISHED_CSV_URL, { cache: "no-store" });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const csvText = await response.text();
+    const rows = parseCSV(csvText);
+    const dataRows = rows.slice(2);
+
+    // GUESTS = [];
+    for (const row of dataRows) {
+      if (!row[1] || row[1].trim() === "") break;
+      GUESTS.push({
+        guest_code: row[0]?.trim() || "",
+        guest_name: row[1]?.trim() || "",
+        phone: row[9]?.trim() || "—",
+        side: row[9]?.trim() || "Bride",
+        inv: row[9]?.trim() || "Sent",
+        rsvp: row[9]?.trim() || "Pending",
+        date: row[9]?.trim() || "—"
+      });
+    }
+
+    renderGuests(GUESTS);
+    updateRsvpDependentUI();
+    notify("Sync Complete", `${GUESTS.length} guests synchronized live.`);
+    updates();
+  } catch (error) {
+    console.error(error);
+    notify("Sync Failed", "Using local backup registry.");
+    // Fallback load local array data if server fetch hits network limits
+    GUESTS = LOCAL_GUEST_BACKUP;
+    renderGuests(GUESTS);
+    updateRsvpDependentUI();
+  }
+}
+
+function updates() {
+
+    document.querySelector('.sh').textContent = GUESTS.length;
+
+    if(GUESTS.length != stats.totalGuests){
+
+      fetch(stats.app+'/sync_guest', {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+          },
+          body: JSON.stringify({
+              guests: GUESTS
+          })
+      })
+      .then(response => response.json())
+      .then(data => {
+          console.log(data);
+      })
+      .catch(error => {
+          console.error(error);
+      });
+    }
+
+
+}
+
+
+function parseCSV(text) {
+  const rows = [];
+  const lines = text.trim().split(/\r?\n/);
+  for (const line of lines) {
+    const row = [];
+    let current = "";
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      if (char === '"') inQuotes = !inQuotes;
+      else if (char === "," && !inQuotes) { row.push(current); current = ""; }
+      else current += char;
+    }
+    row.push(current);
+    rows.push(row.map(cell => cell.trim().replace(/^"|"$/g, "")));
+  }
+  return rows;
+}
+
+/* ---------------- Render Tables & Bind DataTables ---------------- */
+function renderGuests(list){
+  const body = document.getElementById("guestTableBody");
+  if(!body) return;
+
+  if (guestsDataTableInstance) {
+    guestsDataTableInstance.destroy();
+  }
+
+  body.innerHTML = list.map(g => `
+    <tr onclick="openDrawer('${g.guest_code}')">
+      <td style="color:var(--muted); font-weight:600;">${g.guest_code}</td>
+      <td class="guest-name">${g.guest_name}</td>
+      <td>${g.phone}</td>
+      <td>${pill(g.side, g.side==="Bride" ? "gold":"grey")}</td>
+      <td>${pill(g.inv, g.inv==="Sent" ? "green":"grey")}</td>
+      <td>${pill(g.rsvp, rsvpTone(g.rsvp))}</td>
+      <td>${g.date}</td>
+      <td onclick="event.stopPropagation()">
+        <div class="row-actions">
+          <button onclick="openDrawer('${g.guest_code}')"><i class="fa-regular fa-eye"></i></button>
+          <button><i class="fa-solid fa-pen"></i></button>
+          <button><i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+      </td>
+    </tr>
+  `).join("");
+
+  guestsDataTableInstance = new DataTable("#guestsTable", {
+    perPage: 10,
+    perPageSelect: [5, 10, 25, 50],
+    nextPrev: true,
+    firstLast: false
+  });
+}
+
+
+
+function updateRsvpDependentUI() {
+  const rsvpTable = document.getElementById("rsvpTableBody");
+  if (!rsvpTable) return;
+
+  if (rsvpDataTableInstance) {
+    rsvpDataTableInstance.destroy();
+  }
+
+  const responses = GUESTS.filter(g => g.rsvp !== "—" && g.rsvp !== "");
+  rsvpTable.innerHTML = responses.map(g => `
+    <tr>
+      <td class="guest-name">${g.name}</td>
+      <td>${g.side}'s side</td>
+      <td>${pill(g.rsvp, rsvpTone(g.rsvp))}</td>
+      <td style="text-align:right; color:var(--muted);">${g.date}</td>
+    </tr>
+  `).join("");
+
+  rsvpDataTableInstance = new DataTable("#rsvpTable", {
+    perPage: 5,
+    perPageSelect: [5, 10, 20],
+    nextPrev: true
+  });
+}
+
+
+const stats = @json($stats);
+
+function filterGuests(){
+  const val = document.getElementById("guestSearch").value;
+  if(guestsDataTableInstance) {
+    guestsDataTableInstance.search(val);
+  }
+}
+
+/* ---------------- Drawer Management ---------------- */
+function openDrawer(id){
+  const g = GUESTS.find(x=>x.id===id);
+  if(!g) return;
+  document.getElementById("drawerAvatar").textContent = initials(g.guest_name);
+  document.getElementById("drawerName").textContent = g.guest_name;
+  document.getElementById("drawerMeta").textContent = `${g.phone} · ${g.guest_code}`;
+  document.getElementById("drawerPills").innerHTML = pill(g.side+"'s side", g.side==="Bride"?"gold":"grey") + pill(g.rsvp, rsvpTone(g.rsvp));
+  document.getElementById("drawerLink").textContent = `wedsuite.app/amara-jonas/${g.id.toLowerCase()}`;
+  document.getElementById("drawerOverlay").classList.add("open");
+}
+function closeDrawer(){ document.getElementById("drawerOverlay").classList.remove("remove").classList.remove("open"); }
+
+/* ---------------- Micro-Helpers & Switch Toggles ---------------- */
+function toggleSwitch(el){ el.classList.toggle("on"); el.classList.toggle("off"); }
+function rsvpTone(status){ return status==="Accepted"?"green":status==="Declined"?"red":status==="Maybe"?"gold":"grey"; }
+function pill(text, tone){ return `<span class="pill pill-${tone}">${text}</span>`; }
+function initials(name){ return name.split(" ").map(n=>n[0]).join("").slice(0,2); }
+
+let toastTimer;
+function notify(title, body){
+  document.getElementById("toastTitle").textContent = title;
+  document.getElementById("toastBody").textContent = body;
+  const t = document.getElementById("toast");
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=> t.classList.remove("show"), 3200);
+}
+
+/* ---------------- Local Seed Arrays & Fallback Data ---------------- */
+const GOLD = "#B4863A", GOLD_LIGHT = "#D9B978", RED = "#C97C5D";
+const LOCAL_GUEST_BACKUP = [
+  { id:"G-0142", name:"Amara Whitfield", phone:"+255 712 334 210", side:"Bride", inv:"Sent", rsvp:"Accepted", date:"12 Jun 2026" },
+  { id:"G-0143", name:"Jonas Mwakalinga", phone:"+255 754 981 002", side:"Groom", inv:"Sent", rsvp:"Pending", date:"12 Jun 2026" },
+  { id:"G-0144", name:"Elena Vasquez", phone:"+255 688 220 447", side:"Bride", inv:"Pending", rsvp:"—", date:"—" },
+  { id:"G-0145", name:"David Okoye", phone:"+255 713 552 981", side:"Groom", inv:"Sent", rsvp:"Declined", date:"10 Jun 2026" },
+  { id:"G-0146", name:"Priya Shah", phone:"+255 621 004 372", side:"Bride", inv:"Sent", rsvp:"Accepted", date:"09 Jun 2026" }
+];
+
+
+
+
+const STATS = [
+    {
+        label: "Total Guests",
+        value: stats.totalGuests,
+        delta: "+4.2%",
+        up: true,
+        seed: 30,
+        icon: "fa-users"
+    },
+    {
+        label: "Invitations Sent",
+        value: stats.sent,
+        delta: "+12.8%",
+        up: true,
+        seed: 26,
+        icon: "fa-paper-plane"
+    },
+    {
+        label: "Pending Invitations",
+        value: stats.pendingInvitation,
+        delta: "-6.1%",
+        up: false,
+        seed: 10,
+        icon: "fa-clock"
+    },
+    {
+        label: "RSVP Accepted",
+        value: stats.accepted,
+        delta: "+8.4%",
+        up: true,
+        seed: 22,
+        icon: "fa-circle-check"
+    },
+    {
+        label: "RSVP Declined",
+        value: stats.declined,
+        delta: "+1.3%",
+        up: false,
+        seed: 8,
+        icon: "fa-circle-xmark"
+    },
+    {
+        label: "Pending Responses",
+        value: stats.pendingResponse,
+        delta: "-3.9%",
+        up: false,
+        seed: 14,
+        icon: "fa-circle-question"
+    }
+];
+
+
+const SYNC_HISTORY = [
+  { time:"Today, 10:45 AM", added:3, updated:6, skipped:0, errors:0 },
+  { time:"Today, 07:00 AM", added:0, updated:2, skipped:1, errors:0 },
+  { time:"Yesterday, 9:12 PM", added:5, updated:4, skipped:0, errors:1 }
+];
+
+const TEMPLATES = [
+  { name:"Champagne Bloom", created:"02 May 2026", uses:214, grad:["#F1E3C6","#D9B978"] },
+  { name:"Midnight Ivory", created:"18 Apr 2026", uses:98, grad:["#2A2521","#6B6258"] },
+  { name:"Rosé Garden", created:"30 Mar 2026", uses:156, grad:["#EAD2CE","#C97C5D"] }
+];
+
+const RSVP_SUMMARY = [
+  { name:"Accepted", value:312, color:GOLD },
+  { name:"Declined", value:58, color:RED },
+  { name:"Pending", value:116, color:GOLD_LIGHT },
+  { name:"Maybe", value:34, color:"#8C8377" },
+];
+
+const ANALYTICS = [
+  { title:"Guest Growth", value:"+42 this month", seed:24, color:GOLD },
+  { title:"Invitation Delivery Rate", value:"97.4%", seed:30, color:"#3E7A45" },
+  { title:"Daily Visitors", value:"184 today", seed:18, color:GOLD }
+];
+
+/* ---------------- Sparklines & Core UI Render loops ---------------- */
+function trend(seed){ return Array.from({length:12}, (_,i)=> Math.max(4, seed + Math.sin(i/1.5+seed)*seed*0.25 + i*(seed*0.04))); }
+
+function sparklineChart(canvasId, seed, color){
+  const ctx = document.getElementById(canvasId);
+  if(!ctx || typeof Chart === "undefined") return;
+  new Chart(ctx, {
+    type:"line",
+    data:{ labels: trend(seed).map((_,i)=>i), datasets:[{
+      data: trend(seed), borderColor: color, borderWidth:2, tension:.4, pointRadius:0,
+      fill:true, backgroundColor: (ctxObj)=>{
+        const g = ctxObj.chart.ctx.createLinearGradient(0,0,0,44);
+        g.addColorStop(0, color+"44"); g.addColorStop(1, color+"00");
+        return g;
+      }
+    }]},
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}, tooltip:{enabled:false}}, scales:{x:{display:false}, y:{display:false}} }
+  });
+}
+
+// Render dynamic elements on initialize load
+document.addEventListener("DOMContentLoaded", () => {
+  fetchGuestsFromPublishedSheet();
+
+  // Populate Non-Table Loop UI Cards
+  const statGrid = document.getElementById("statGrid");
+  STATS.forEach((s, idx)=>{
+    statGrid.insertAdjacentHTML("beforeend", `
+      <div class="card stat-card">
+        <div class="stat-glow"></div>
+        <div class="stat-top">
+          <div class="stat-icon"><i class="fa-solid ${s.icon}"></i></div>
+          <div class="stat-delta ${s.up?'up':'down'}"><i class="fa-solid ${s.up?'fa-arrow-up':'fa-arrow-down'}"></i>${s.delta}</div>
+        </div>
+        <div class="stat-value serif">${s.value}</div>
+        <div class="stat-label">${s.label}</div>
+        <div class="stat-chart"><canvas id="stat-spark-${idx}"></canvas></div>
+      </div>
+    `);
+    sparklineChart(`stat-spark-${idx}`, s.seed, s.up ? GOLD : RED);
+  });
+
+  document.getElementById("syncHistory").innerHTML = SYNC_HISTORY.map(h => `
+    <div class="history-row">
+      <div class="history-icon" style="background:${h.errors? '#F6E4E0':'#F5EAD3'}; color:${h.errors?'#B24B34':'#8a6526'};"><i class="fa-solid ${h.errors?'fa-circle-xmark':'fa-circle-check'}"></i></div>
+      <div class="history-time">${h.time}</div>
+      <div class="history-pills">${pill('+'+h.added+' added','green')}${pill(h.updated+' updated','gold')}</div>
+    </div>
+  `).join("");
+
+  document.getElementById("templateGrid").innerHTML = TEMPLATES.map(t => `
+    <div class="card template-card">
+      <div class="template-cover" style="background:linear-gradient(160deg, ${t.grad[0]}, ${t.grad[1]});"><div class="template-cover-name serif">${t.name}</div></div>
+      <div class="template-body"><div class="template-meta"><span>Created ${t.created}</span><span>${t.uses} uses</span></div></div>
+    </div>
+  `).join("");
+
+  document.getElementById("rsvpGrid").innerHTML = RSVP_SUMMARY.map(r => `
+    <div class="card rsvp-card">
+      <div class="mini-title">${r.name}</div>
+      <div class="rsvp-value serif">${r.value}</div>
+      <div class="rsvp-bar"><div class="rsvp-bar-fill" style="width:${(r.value/520)*100}%; background:${r.color};"></div></div>
+    </div>
+  `).join("");
+
+  const analyticsGrid = document.getElementById("analyticsGrid");
+  ANALYTICS.forEach((a, idx)=>{
+    analyticsGrid.insertAdjacentHTML("beforeend", `
+      <div class="card mini-card">
+        <div class="mini-title">${a.title}</div>
+        <div class="mini-value serif">${a.value}</div>
+        <div class="mini-chart"><canvas id="analytics-spark-${idx}"></canvas></div>
+      </div>
+    `);
+    sparklineChart(`analytics-spark-${idx}`, a.seed, a.color);
+  });
+
+  // Load Primary Charts
+  if(typeof Chart !== "undefined") {
+    new Chart(document.getElementById("rsvpMomentum"), {
+      type:"line",
+      data:{ labels: ["D1","D2","D3","D4","D5","D6","D7","D8","D9","D10"], datasets:[{ data:[20,40,45,70,82,120,150,190,240,312], borderColor:GOLD, pointRadius:0, fill:false }]},
+      options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{display:false}, y:{display:false}} }
+    });
+    new Chart(document.getElementById("rsvpPie"), {
+      type:"doughnut",
+      data:{ labels: RSVP_SUMMARY.map(r=>r.name), datasets:[{ data: RSVP_SUMMARY.map(r=>r.value), backgroundColor: RSVP_SUMMARY.map(r=>r.color) }]},
+      options:{ responsive:true, maintainAspectRatio:false, cutout:"70%", plugins:{legend:{display:false}} }
+    });
+  }
+});
+</script>
+</body>
+</html>
