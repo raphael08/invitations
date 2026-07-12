@@ -6,7 +6,10 @@ use Illuminate\Http\Request;
 use App\Http\Requests;
 use App\Models\Event;
 use App\Models\Guest;
+use App\Models\Rsvp;
 use Illuminate\Support\Facades\DB;
+use Symfony\Component\Process\Process;
+
 class AppController extends Controller
 {
     //
@@ -15,6 +18,7 @@ class AppController extends Controller
     public function index($app)
     {
         $event = Event::where('app_name', $app)->firstOrFail();
+        $guests = Guest::where('event_id', $event->id)->get();
 
         $stats = [
             'totalGuests' => Guest::where('event_id', $event->id)->count(),
@@ -41,29 +45,29 @@ class AppController extends Controller
             'app' => $app,
         ];
 
-        return view('dashboard', compact('event', 'stats'));
+        return view('dashboard', compact('event', 'stats', 'guests', 'app'));
     }
 
     public function sync_guest(Request $request, $app)
     {
-DB::beginTransaction();
+        DB::beginTransaction();
         try {
-        
-        // dd($invitation_token);
-        $event = Event::where('app_name', $app)->firstOrFail();
+
+            // dd($invitation_token);
+            $event = Event::where('app_name', $app)->firstOrFail();
 
 
-        // dd($request->guests);
+            // dd($request->guests);
 
-        foreach ($request->guests as $guest) {
-            $invitation_token = Guest::generateCode(10);
-            $guest['event_id'] = $event->id;
-            $guest['invitation_token'] = $invitation_token;
+            foreach ($request->guests as $guest) {
+                $invitation_token = Guest::generateCode(10);
+                $guest['event_id'] = $event->id;
+                $guest['invitation_token'] = $invitation_token;
 
 
-            Guest::create($guest);
-            } 
-            
+                Guest::create($guest);
+            }
+
             DB::commit();
             // dd($guest);
             return response()->json([
@@ -71,8 +75,7 @@ DB::beginTransaction();
                 'statusCode' => 200,
                 'message' => 'success'
             ], 500);
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
 
             DB::rollBack();
 
@@ -82,8 +85,6 @@ DB::beginTransaction();
                 'message' => $e->getMessage()
             ], 500);
         }
-
-       
     }
 
     public function invitation($app, $token)
@@ -92,24 +93,24 @@ DB::beginTransaction();
         try {
             $event = Event::where('app_name', $app)->first();
 
-            if(!$event){
+            if (!$event) {
                 return response()->json([
-                'status' => false,
-                'statusCode' => 500,
-                'message' => 'Invalid token'
-            ], 500);
+                    'status' => false,
+                    'statusCode' => 500,
+                    'message' => 'Invalid token'
+                ], 500);
             }
 
             $token = Guest::where('event_id', $event->id)->where('invitation_token', $token)->first();
-            if(!$token){
+            if (!$token) {
                 return response()->json([
-                'status' => false,
-                'statusCode' => 500,
-                'message' => 'Invalid token'
-            ], 500);
+                    'status' => false,
+                    'statusCode' => 500,
+                    'message' => 'Invalid token'
+                ], 500);
             }
 
-            return view('index',compact('token'));
+            return view('index', compact('token', 'app'));
 
 
             // DB::commit();
@@ -123,5 +124,78 @@ DB::beginTransaction();
                 'message' => $e->getMessage()
             ], 500);
         }
+    }
+
+    public function generate(Request $request)
+    {
+
+    // dd($request->all());
+        $event = Event::where('app_name', $request->guest_app)->first();
+        if ($request->filled('guest_token')) {
+
+            $guests = Guest::where('event_id', $event->id)->where('invitation_token', $request->guest_token)
+                ->get(['id', 'invitation_token','guest_name'])
+                ->toArray();
+        } elseif ($request->filled('guest_tokens')) {
+
+            $guests = Guest::where('event_id', $event->id)->whereIn('invitation_token', $request->guest_token)
+                ->get(['id', 'guest_name','invitation_token'])
+                ->toArray();
+        } else {
+
+            $guests = Guest::get(['id', 'guest_name','invitation_token'])
+                ->toArray();
+        }
+
+        // dd($guests);
+        if($guests){
+            $guests['app'] = $request->guest_app;
+        }
+        // $python = '/usr/bin/python3';
+        $python = base_path('.venv/bin/python');
+        // or base_path('.venv/bin/python')
+
+        $script = base_path('python/generate_cards.py');
+
+
+        $process = new Process([
+            $python,
+            $script,
+            json_encode($guests)
+        ]);
+
+        $process->setTimeout(0);
+
+        $process->run();
+
+        if (!$process->isSuccessful()) {
+
+            return response()->json([
+                'success' => false,
+                'error' => $process->getErrorOutput()
+            ], 500);
+        }
+
+        $generated = json_decode(
+            $process->getOutput(),
+            true
+        );
+
+        // dd($generated);
+
+        foreach ($generated as $card) {
+
+            Guest::where('id', $card['id'])
+                ->update([
+                    // 'invitation_image' => $card['image'],
+                    'rsvp_status' => $request->attendance,
+                ]);
+            Rsvp::create(['guest_id' => $card['id'], 'attendance' => $request->attendance, 'adults' => $request->adults, 'children' => $request->children, 'message' => $request->message, 'submitted_at' => now()]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'generated' => $generated
+        ]);
     }
 }

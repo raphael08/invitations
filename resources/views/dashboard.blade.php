@@ -97,7 +97,7 @@
   }
   .topbar-left{display:flex; align-items:center; gap:12px;}
   .menu-toggle{
-    display:none; width:36px; height:36px; border-radius:12px; background:#fff; 
+    display:none; width:36px; height:36px; border-radius:12px; background:#fff;
     border:1px solid var(--line); align-items:center; justify-content:center; color:var(--charcoal-soft);
   }
   .breadcrumb{font-size:13px; color:var(--muted); display:flex; align-items:center; gap:8px;}
@@ -197,7 +197,7 @@
     display:flex; align-items:center; gap:6px; padding:9px 14px; border-radius:12px; font-size:13px;
     border:1px solid var(--line); background:#fff; color:var(--charcoal-soft);
   }
-  
+
   table{width:100%; border-collapse:collapse; font-size:13px;}
   thead tr{background:var(--cream); border-bottom:1px solid var(--line);}
   th{text-align:left; font-weight:500; padding:14px 20px; font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:#8a8377;}
@@ -214,7 +214,7 @@
   .row-actions button:hover{background:#F5EAD3;}
 
   /* ---------- Vanilla DataTables UI Refinements ---------- */
-  .dataTable-wrapper .dataTable-top, 
+  .dataTable-wrapper .dataTable-top,
   .dataTable-wrapper .dataTable-bottom {
     padding: 16px 20px;
     font-size: 13px;
@@ -225,9 +225,9 @@
   }
   .dataTable-wrapper .dataTable-top { border-bottom: 1px solid var(--line-soft); }
   .dataTable-wrapper .dataTable-bottom { border-top: 1px solid var(--line-soft); }
-  
+
   /* Hide native library layouts that duplicate custom layout wrappers */
-  .dataTable-search { display: none !important; } 
+  .dataTable-search { display: none !important; }
 
   .dataTable-input {
     padding: 8px 14px;
@@ -687,7 +687,7 @@
       <div style="flex:1; min-width:0;">
         <div class="qr-label">Unique invitation link</div>
         <div class="qr-link" id="drawerLink">wedsuite.app/amara-jonas/g-0142</div>
-        <button class="copy-link"><i class="fa-solid fa-copy"></i>Copy link</button>
+        <button class="copy-link" onclick="copyDrawerLink()"><i class="fa-solid fa-copy"></i>Copy link</button>
       </div>
     </div>
 
@@ -708,9 +708,9 @@
     </div>
 
     <div class="drawer-actions">
-      <button class="btn btn-gold"><i class="fa-solid fa-paper-plane"></i>Send Again</button>
+      <button class="btn btn-gold" id="sendWhatsAppBtn"><i class="fa-solid fa-paper-plane"></i>Send Again</button>
       <button class="btn btn-outline"><i class="fa-solid fa-pen"></i>Edit</button>
-      <button class="btn btn-outline"><i class="fa-solid fa-link"></i>Copy Link</button>
+      <button class="btn btn-outline" onclick="copyDrawerLink()"><i class="fa-solid fa-link"></i>Copy Link</button>
       <button class="btn btn-outline"><i class="fa-solid fa-download"></i>Download QR</button>
     </div>
   </div>
@@ -731,7 +731,7 @@ document.querySelectorAll(".nav-item").forEach(btn=>{
     document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
     document.getElementById(`page-${btn.dataset.page}`).classList.add("active");
     document.getElementById("crumb").textContent = btn.querySelector("span").textContent;
-    
+
     if(window.innerWidth <= 1000) {
       toggleMobileSidebar();
     }
@@ -785,6 +785,52 @@ async function fetchGuestsFromPublishedSheet() {
   }
 }
 
+/* ---------------- Database Sync & Fetch Engine ---------------- */
+let GUEST = [];
+guestsDataTableInstance = null;
+rsvpDataTableInstance = null;
+
+// Directly feed the database array from your Laravel controller into JavaScript
+const DATABASE_GUESTS = @json($guests ?? []);
+
+console.log(DATABASE_GUESTS);
+
+
+function loadGuestsFromDatabase() {
+  try {
+    console.log('here');
+
+    // Fall back to your local backup array if the database table collection is currently empty
+    if (!DATABASE_GUESTS || DATABASE_GUESTS.length === 0) {
+      console.warn("Database registry is empty. Loading local backup...");
+      GUEST = LOCAL_GUEST_BACKUP;
+    } else {
+      GUEST = DATABASE_GUESTS.map(g => ({
+        // Map database column names safely to your UI keys
+        guest_code: g.guest_code || g.id || "",
+        guest_name: g.guest_name || g.name || "",
+        phone: g.phone || "—",
+        side: g.side || "Bride",
+        inv: g.inv || g.invitation_status || "Sent",
+        rsvp: g.rsvp || g.rsvp_status || "Pending",
+        date: g.date || g.invited_at || "—",
+        inv_code: g.invitation_token || "—"
+      }));
+    }
+
+    renderGuests(GUEST);
+    updateRsvpDependentUI();
+
+    // Dynamically update rows count display
+    if (document.querySelector('.sh')) {
+      document.querySelector('.sh').textContent = GUESTS.length;
+    }
+  } catch (error) {
+    console.error("Failed to parse database records:", error);
+    notify("Error", "Could not load guest list from database.");
+  }
+}
+
 function updates() {
 
     document.querySelector('.sh').textContent = GUESTS.length;
@@ -834,6 +880,40 @@ function parseCSV(text) {
 }
 
 /* ---------------- Render Tables & Bind DataTables ---------------- */
+// function renderGuests(list){
+//   const body = document.getElementById("guestTableBody");
+//   if(!body) return;
+
+//   if (guestsDataTableInstance) {
+//     guestsDataTableInstance.destroy();
+//   }
+
+//   body.innerHTML = list.map(g => `
+//     <tr onclick="openDrawer('${g.guest_code}')">
+//       <td style="color:var(--muted); font-weight:600;">${g.guest_code}</td>
+//       <td class="guest-name">${g.guest_name}</td>
+//       <td>${g.phone}</td>
+//       <td>${pill(g.side, g.side==="Bride" ? "gold":"grey")}</td>
+//       <td>${pill(g.inv, g.inv==="Sent" ? "green":"grey")}</td>
+//       <td>${pill(g.rsvp, rsvpTone(g.rsvp))}</td>
+//       <td>${g.date}</td>
+//       <td onclick="event.stopPropagation()">
+//         <div class="row-actions">
+//           <button onclick="openDrawer('${g.guest_code}')"><i class="fa-regular fa-eye"></i></button>
+//           <button><i class="fa-solid fa-pen"></i></button>
+//           <button><i class="fa-solid fa-paper-plane"></i></button>
+//         </div>
+//       </td>
+//     </tr>
+//   `).join("");
+
+//   guestsDataTableInstance = new DataTable("#guestsTable", {
+//     perPage: 10,
+//     perPageSelect: [5, 10, 25, 50],
+//     nextPrev: true,
+//     firstLast: false
+//   });
+// }
 function renderGuests(list){
   const body = document.getElementById("guestTableBody");
   if(!body) return;
@@ -842,24 +922,31 @@ function renderGuests(list){
     guestsDataTableInstance.destroy();
   }
 
-  body.innerHTML = list.map(g => `
-    <tr onclick="openDrawer('${g.guest_code}')">
-      <td style="color:var(--muted); font-weight:600;">${g.guest_code}</td>
-      <td class="guest-name">${g.guest_name}</td>
-      <td>${g.phone}</td>
-      <td>${pill(g.side, g.side==="Bride" ? "gold":"grey")}</td>
-      <td>${pill(g.inv, g.inv==="Sent" ? "green":"grey")}</td>
-      <td>${pill(g.rsvp, rsvpTone(g.rsvp))}</td>
-      <td>${g.date}</td>
-      <td onclick="event.stopPropagation()">
-        <div class="row-actions">
-          <button onclick="openDrawer('${g.guest_code}')"><i class="fa-regular fa-eye"></i></button>
-          <button><i class="fa-solid fa-pen"></i></button>
-          <button><i class="fa-solid fa-paper-plane"></i></button>
-        </div>
-      </td>
-    </tr>
-  `).join("");
+  body.innerHTML = list.map(g => {
+    // Normalize properties to support both live sync and local backup schemas
+    const code = g.guest_code || g.id || "";
+    const name = g.guest_name || g.name || "";
+
+    return `
+      <tr onclick="openDrawer('${code}')">
+        <td style="color:var(--muted); font-weight:600;">${code}</td>
+        <td class="guest-name">${name}</td>
+        <td>${g.phone}</td>
+        <td>${pill(g.side, g.side==="Bride" ? "gold":"grey")}</td>
+        <td>${pill(g.inv, g.inv==="Sent" ? "green":"grey")}</td>
+        <td>${pill(g.rsvp, rsvpTone(g.rsvp))}</td>
+        <td>${g.date}</td>
+        <td onclick="event.stopPropagation()">
+          <div class="row-actions">
+            <!-- Fixed: Handlers now use unified code identifiers -->
+            <button onclick="openDrawer('${code}')"><i class="fa-regular fa-eye"></i></button>
+            <button onclick="openDrawer('${code}')"><i class="fa-solid fa-pen"></i></button>
+            <button><i class="fa-solid fa-paper-plane"></i></button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join("");
 
   guestsDataTableInstance = new DataTable("#guestsTable", {
     perPage: 10,
@@ -870,7 +957,30 @@ function renderGuests(list){
 }
 
 
+// function updateRsvpDependentUI() {
+//   const rsvpTable = document.getElementById("rsvpTableBody");
+//   if (!rsvpTable) return;
 
+//   if (rsvpDataTableInstance) {
+//     rsvpDataTableInstance.destroy();
+//   }
+
+//   const responses = GUESTS.filter(g => g.rsvp !== "—" && g.rsvp !== "");
+//   rsvpTable.innerHTML = responses.map(g => `
+//     <tr>
+//       <td class="guest-name">${g.name}</td>
+//       <td>${g.side}'s side</td>
+//       <td>${pill(g.rsvp, rsvpTone(g.rsvp))}</td>
+//       <td style="text-align:right; color:var(--muted);">${g.date}</td>
+//     </tr>
+//   `).join("");
+
+//   rsvpDataTableInstance = new DataTable("#rsvpTable", {
+//     perPage: 5,
+//     perPageSelect: [5, 10, 20],
+//     nextPrev: true
+//   });
+// }
 function updateRsvpDependentUI() {
   const rsvpTable = document.getElementById("rsvpTableBody");
   if (!rsvpTable) return;
@@ -879,10 +989,12 @@ function updateRsvpDependentUI() {
     rsvpDataTableInstance.destroy();
   }
 
-  const responses = GUESTS.filter(g => g.rsvp !== "—" && g.rsvp !== "");
+  // Filter out guests who haven't responded yet
+  const responses = GUESTS.filter(g => g.rsvp !== "—" && g.rsvp !== "Pending" && g.rsvp !== "");
+
   rsvpTable.innerHTML = responses.map(g => `
     <tr>
-      <td class="guest-name">${g.name}</td>
+      <td class="guest-name">${g.guest_name}</td>
       <td>${g.side}'s side</td>
       <td>${pill(g.rsvp, rsvpTone(g.rsvp))}</td>
       <td style="text-align:right; color:var(--muted);">${g.date}</td>
@@ -896,7 +1008,6 @@ function updateRsvpDependentUI() {
   });
 }
 
-
 const stats = @json($stats);
 
 function filterGuests(){
@@ -907,17 +1018,99 @@ function filterGuests(){
 }
 
 /* ---------------- Drawer Management ---------------- */
+// function openDrawer(id){
+//   const g = GUESTS.find(x=>x.id===id);
+//   if(!g) return;
+//   document.getElementById("drawerAvatar").textContent = initials(g.guest_name);
+//   document.getElementById("drawerName").textContent = g.guest_name;
+//   document.getElementById("drawerMeta").textContent = `${g.phone} · ${g.guest_code}`;
+//   document.getElementById("drawerPills").innerHTML = pill(g.side+"'s side", g.side==="Bride"?"gold":"grey") + pill(g.rsvp, rsvpTone(g.rsvp));
+//   document.getElementById("drawerLink").textContent = `wedsuite.app/amara-jonas/${g.id.toLowerCase()}`;
+//   document.getElementById("drawerOverlay").classList.add("open");
+// }
+
+/* ---------------- Drawer Management ---------------- */
+// function openDrawer(id){
+//   // Check both property types to find a match safely
+//   const g = GUEST.find(x => x.id === id || x.guest_code === id);
+
+//   console.log(g);
+
+//   if(!g) return;
+
+//   const name = g.guest_name || g.name || "";
+//   const code = g.inv_code || g.id || "";
+
+//   document.getElementById("drawerAvatar").textContent = initials(name);
+//   document.getElementById("drawerName").textContent = name;
+//   document.getElementById("drawerMeta").textContent = `${g.phone} · ${code}`;
+//   document.getElementById("drawerPills").innerHTML = pill(g.side+"'s side", g.side==="Bride"?"gold":"grey") + pill(g.rsvp, rsvpTone(g.rsvp));
+//   document.getElementById("drawerLink").textContent = `https://rsvp.myvnc.com/aa${code.toLowerCase()}`;
+//   document.getElementById("drawerOverlay").classList.add("open");
+// }
+
+
+/* ---------------- Drawer Management & Web API ---------------- */
+let currentGuestForDrawer = null;
+
 function openDrawer(id){
-  const g = GUESTS.find(x=>x.id===id);
+  const g = GUEST.find(x => x.id === id || x.guest_code === id);
   if(!g) return;
-  document.getElementById("drawerAvatar").textContent = initials(g.guest_name);
-  document.getElementById("drawerName").textContent = g.guest_name;
-  document.getElementById("drawerMeta").textContent = `${g.phone} · ${g.guest_code}`;
+
+  currentGuestForDrawer = g; // Keep local reference for sharing actions
+
+  const name = g.guest_name || g.name || "";
+  const code = g.inv_code || g.id || "";
+  const generatedUrl = `https://rsvp.myvnc.com/aa/${code}`;
+
+  document.getElementById("drawerAvatar").textContent = initials(name);
+  document.getElementById("drawerName").textContent = name;
+  document.getElementById("drawerMeta").textContent = `${g.phone} · ${code}`;
   document.getElementById("drawerPills").innerHTML = pill(g.side+"'s side", g.side==="Bride"?"gold":"grey") + pill(g.rsvp, rsvpTone(g.rsvp));
-  document.getElementById("drawerLink").textContent = `wedsuite.app/amara-jonas/${g.id.toLowerCase()}`;
+  document.getElementById("drawerLink").textContent = generatedUrl;
+
+  // Set up the WhatsApp dynamic click action link
+  const cleanPhone = g.phone.replace(/[^0-9]/g, ''); // Strips spaces, +, hyphens safely
+
+  // Custom message body text
+  const messageText = `Habari ${name}! ✨\n\nTunayofuraha kukualika kwenye harusi ya Amara & Jonas. Bonyeza link hapa chini kufungua kadi yako ya mwaliko rasmi na kuthibitisha mahudhurio yako (RSVP):\n\n🔗 ${generatedUrl}`;
+
+  const encodedText = encodeURIComponent(messageText);
+  document.getElementById("sendWhatsAppBtn").onclick = () => {
+    window.open(`https://wa.me/${cleanPhone}?text=${encodedText}`, '_blank');
+  };
+
   document.getElementById("drawerOverlay").classList.add("open");
 }
-function closeDrawer(){ document.getElementById("drawerOverlay").classList.remove("remove").classList.remove("open"); }
+
+function closeDrawer(){
+  document.getElementById("drawerOverlay").classList.remove("open");
+}
+
+// Global Link Clipboard Copy Action
+function copyDrawerLink() {
+  const linkText = document.getElementById("drawerLink").textContent;
+  console.log(linkText);
+
+  if (!linkText) return;
+
+  // Prepend protocol so it copies fully formatted
+  const fullUrl = `https://${linkText}`;
+
+  navigator.clipboard.writeText(fullUrl)
+    .then(() => {
+      notify("Link Copied", "The unique invitation link was copied to your clipboard!");
+    })
+    .catch(err => {
+      console.error('Failed to copy text: ', err);
+    });
+}
+
+// function closeDrawer(){
+//   // Fixed the broken syntax chain error
+//   document.getElementById("drawerOverlay").classList.remove("open");
+// }
+// function closeDrawer(){ document.getElementById("drawerOverlay").classList.remove("remove").classList.remove("open"); }
 
 /* ---------------- Micro-Helpers & Switch Toggles ---------------- */
 function toggleSwitch(el){ el.classList.toggle("on"); el.classList.toggle("off"); }
@@ -1047,7 +1240,8 @@ function sparklineChart(canvasId, seed, color){
 
 // Render dynamic elements on initialize load
 document.addEventListener("DOMContentLoaded", () => {
-  fetchGuestsFromPublishedSheet();
+//   fetchGuestsFromPublishedSheet();
+loadGuestsFromDatabase();
 
   // Populate Non-Table Loop UI Cards
   const statGrid = document.getElementById("statGrid");
