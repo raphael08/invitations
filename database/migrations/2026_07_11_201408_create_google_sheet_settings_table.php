@@ -11,9 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('google_sheet_settings', function (Blueprint $table) {
+
+    Schema::create('google_sheet_settings', function (Blueprint $table) {
 
     $table->id();
+
+    $table->foreignId('event_id')->constrained()->cascadeOnDelete();
 
     $table->string('spreadsheet_id');
 

@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="sw" data-lang="sw">
+<html lang="en" data-lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-     <title>Abel & Anlin Wedding Invitation</title>
+    <title>Abel & Anlin Wedding Invitation</title>
 
     <meta name="description" content="Ungana nasi katika kusherehekea muungano wa Abel & Anlin.">
 
@@ -1191,7 +1191,7 @@
         }
 
         /* Post Submission Output Engines */
-        .rsvp-post-submit-curtain {
+        /* .rsvp-post-submit-curtain {
             position: absolute;
             top: 0;
             left: 0;
@@ -1205,7 +1205,26 @@
             z-index: 10;
             text-align: center;
             padding: 40px;
-        }
+        } */
+
+
+        .rsvp-post-submit-curtain {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--bg-ivory);
+    display: none;
+    flex-direction: column;
+    justify-content: flex-start; /* Changed from center to allow smooth scrolling */
+    align-items: center;
+    z-index: 10;
+    text-align: center;
+    padding: 30px 20px;
+    overflow-y: auto; /* Added so bottom content/buttons are scrollable */
+}
+
 
         .rsvp-post-submit-curtain h3 {
             font-family: var(--font-accent);
@@ -1383,7 +1402,7 @@
     <!-- System Utilities Control Tray -->
     <div class="system-utilities-tray">
         <button class="utility-btn" id="language-toggle" title="Switch Language / Badili Lugha">
-            <span style="font-family: var(--font-sans); font-size: 0.75rem; font-weight: 600;">SW</span>
+            <span style="font-family: var(--font-sans); font-size: 0.75rem; font-weight: 600;">EN</span>
         </button>
         <button class="utility-btn" id="theme-toggle" title="Toggle Appearance Profile">
             <i data-feather="moon"></i>
@@ -1441,7 +1460,7 @@
                 <h3 data-en="The Celestial Wedding Invitation" data-sw="Mwaliko Rasmi Wa Harusi">Mwaliko Rasmi Wa
                     Harusi</h3>
                 <h1>Abel & Anlin</h1>
-                <span class="ampersand-divider">💍</span>
+                <span class="ampersand-divider"></span>
                 <p class="date-string">05 &bull; SEPTEMBER &bull; 2026</p>
                 <p class="poetic-quote">"Two souls with but a single thought, two hearts that beat as one."</p>
             </div>
@@ -1450,8 +1469,8 @@
         <!-- Contextual Welcome Node -->
         <section id="personalized-guest-center" class="reveal">
             <div class="guest-welcome-card glass-card">
-                <div class="guest-title-salutation" id="dynamic-salutation-node" data-en="Dear Esteemed Guest,"
-                    data-sw="Kwa Ndugu Mpendwa Mwalikwa,">Kwa Ndugu Mpendwa Mwalikwa,</div>
+                <div class="guest-title-salutation" id="dynamic-salutation-node" data-en="{{ $token->guest_name }}"
+                    data-sw="{{ $token->guest_name }}">{{ $token->guest_name }},</div>
                 <p id="dynamic-welcome-statement"
                     data-en="We are truly honored to invite you to celebrate our special day."
                     data-sw="Tuna heshima kubwa kukualika kujumuika nasi kwenye siku yetu hii maalum.">Tuna heshima
@@ -1504,7 +1523,7 @@
                     <div class="story-inner-card glass-card">
                         <img src="https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?auto=format&fit=crop&w=600&q=80"
                             alt="The Proposal">
-                        <span class="meta-date">SEPTEMBER 09, 2026</span>
+                        <span class="meta-date">SEPTEMBER 05, 2026</span>
                         <h3 data-en="The Sovereign Infinity Yes" data-sw="Mkataba wa Milele">Mkataba wa Milele</h3>
                         <p data-en="Beneath an expansive canopy of light projections, a lifelong query received its infinite answer."
                             data-sw="Chini ya dari kubwa ya makadirio ya mwanga, swali la maisha litapata jibu lake la milele.">
@@ -1778,23 +1797,42 @@
             <div class="rsvp-form-enclosure glass-card reveal" id="rsvp-interface-container-node">
                 <!-- Built in Success Curtain Node -->
                 <div class="rsvp-post-submit-curtain" id="rsvp-success-curtain-layer">
-                    <h3 data-en="Confirmation Secured" data-sw="Imethibitishwa Kikamilifu">Imethibitishwa Kikamilifu
-                    </h3>
-                    <p data-en="Your data values have populated our database. Save your entry QR key token below."
-                        data-sw="Taarifa zako zimehifadhiwa kwenye kanzidata yetu. Hifadhi alama yako ya QR hapa chini.">
-                    </p>
 
-                    <div class="qr-output-zone" id="generated-qrcode-target"></div>
+                    <!-- Shown when the guest has ACCEPTED -->
+                    <div id="rsvp-status-accepted-block" style="display:none;">
+                        <h3 data-en="Confirmation Secured" data-sw="Imethibitishwa Kikamilifu">Confirmation Secured
+                        </h3>
+                        <p data-en="Your data values have populated our database. Save your entry QR key token below."
+                            data-sw="Taarifa zako zimehifadhiwa kwenye kanzidata yetu. Hifadhi alama yako ya QR hapa chini.">
+                        </p>
 
-                    <div
-                        style="margin-top: 20px; display: flex; flex-direction: column; gap: 15px; align-items: center;">
-                        <button class="gold-button" id="whatsapp-share-trigger-btn"><i
-                                data-feather="message-circle"></i> <span data-en="Transmit to Couple via WhatsApp"
-                                data-sw="Tuma kwa Wanandoa WhatsApp">Tuma kwa Wanandoa WhatsApp</span></button>
-                        <button class="gold-button" id="calendar-reminder-btn"><i data-feather="calendar"></i> <span
-                                data-en="Add to Google Calendar" data-sw="Weka Kwenye Kalenda">Weka Kwenye
-                                Kalenda</span></button>
+                        <div class="qr-output-zone" id="generated-qrcode-target"></div>
+
+                        <div
+                            style="margin-top: 20px; display: flex; flex-direction: column; gap: 15px; align-items: center;">
+                            <button class="gold-button" id="whatsapp-share-trigger-btn" style="display: none"><i
+                                    data-feather="message-circle"></i> <span data-en="Transmit to Couple via WhatsApp"
+                                    data-sw="Tuma kwa Wanandoa WhatsApp">Transmit to Couple via WhatsApp</span></button>
+                            <button class="gold-button" style="display: none" id="calendar-reminder-btn"><i
+                                    data-feather="calendar"></i> <span data-en="Add to Google Calendar"
+                                    data-sw="Weka Kwenye Kalenda">Add to Google
+                                    Calendar</span></button>
+                        </div>
                     </div>
+
+                    <!-- Shown when the guest has DECLINED -->
+                    <div id="rsvp-status-declined-block" style="display:none;">
+                        <h3 data-en="Response Received" data-sw="Jibu Limepokelewa">Response Received</h3>
+                        <p data-en="We're sorry you won't be able to join us, but we sincerely appreciate you taking the time to let us know. Thank you, and we hope to celebrate with you another time."
+                            data-sw="Tunasikitika hutaweza kuja, lakini tunashukuru sana kwa kutujulisha. Asante, na tunatumaini kukutana nawe wakati mwingine.">
+                            We're sorry you won't be able to join us, but we sincerely appreciate you taking the time
+                            to let us know. Thank you, and we hope to celebrate with you another time.</p>
+                    </div>
+
+                    <!-- Always available: lets the guest re-open the form and update their response -->
+                    {{-- <button type="button" class="gold-button" id="change-response-btn"
+                        style="margin-top: 25px;"><i data-feather="edit-2"></i>
+                        <span data-en="Change Response" data-sw="Badilisha Jibu">Change Response</span></button> --}}
                 </div>
 
                 <!-- Form Framework Target Element -->
@@ -1805,20 +1843,36 @@
                                 data-sw="Majina Kamili">Majina Kamili</label>
                             <input type="text" id="input-field-name" required placeholder="e.g. Raphael Siphael"
                                 value='{{ $token->guest_name }}' readonly>
-                                <input type="hidden" id="input-field-app" value="{{$app}}">
-                                <input type="hidden" id="input-field-token" value="{{$token->invitation_token}}">
+                            <input type="hidden" id="input-field-app" value="{{ $app }}">
+                            <input type="hidden" id="input-field-token" value="{{ $token->invitation_token }}">
                         </div>
                         <div class="rsvp-form-group">
                             <label for="select-field-status" data-en="Attendance Status"
                                 data-sw="Hali ya Kuhudhuria">Hali ya Kuhudhuria</label>
-                            <select id="select-field-status" required>
-                                <option value="" disabled selected data-en="Select alignment profile"
-                                    data-sw="Chagua wasifu">Chagua wasifu</option>
-                                <option value="Accepted" data-en="Joyfully Accepting" data-sw="Naitikia kwa Furaha">
-                                    Naitikia kwa Furaha</option>
-                                <option value="Declined" data-en="Regretfully Declining"
-                                    data-sw="Nasikitika Sitoweza">Nasikitika Sitoweza</option>
-                            </select>
+                            <div class="radio-group-status"
+                                style="display: flex; flex-direction: column; gap: 8px; margin: 12px 0;">
+                                {{-- <label style="font-size: 13px; font-weight: 500; margin-bottom: 4px;"
+                                    data-en="Attendance Status" data-sw="Hali ya Kuhudhuria">Hali ya
+                                    Kuhudhuria</label> --}}
+
+                                <label
+                                    style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer;">
+                                    <input type="radio" name="attendance_status" id="select-field-status-accepted"
+                                        value="Accepted" checked data-en="Joyfully Accepting"
+                                        data-sw="Naitikia kwa Furaha">
+                                    <span data-en="Joyfully Accepting" data-sw="Naitikia kwa Furaha">Naitikia kwa
+                                        Furaha</span>
+                                </label>
+
+                                <label
+                                    style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer;">
+                                    <input type="radio" name="attendance_status" id="select-field-status-declined"
+                                        value="Declined" data-en="Regretfully Declining"
+                                        data-sw="Nasikitika Sitoweza">
+                                    <span data-en="Regretfully Declining" data-sw="Nasikitika Sitoweza">Nasikitika
+                                        Sitoweza</span>
+                                </label>
+                            </div>
                         </div>
                         <div class="rsvp-form-group">
                             <label for="select-field-adults" data-en="Adult Seats Requested"
@@ -1883,6 +1937,61 @@
 
     <!-- --- CORE SYSTEM ARCHITECTURE CODE ENGINE --- -->
     <script>
+        var data = @json($token ?? []);
+        // console.log(data);
+
+
+        if (data.rsvp_status == "Accepted") {
+
+            var image_url = data.url + '/' + data.event.app_name + '/cards/' + 'guest_' + data.id + '.png';
+            // console.log(image_url);
+            // return;
+
+            finalizeSuccessfulRSVPUiState(image_url, "Accepted");
+        } else if (data.rsvp_status == "Declined") {
+
+            finalizeSuccessfulRSVPUiState(null, "Declined");
+        }
+
+        // --- PREFILL FORM WITH PREVIOUSLY STORED RESPONSE (fetched from database) ---
+        function prefillFormFromStoredResponse() {
+            if (!data.rsvp_status) return;
+
+            if (data.rsvp_status === "Declined") {
+                const declinedRadio = document.getElementById("select-field-status-declined");
+                if (declinedRadio) declinedRadio.checked = true;
+            } else if (data.rsvp_status === "Accepted") {
+                const acceptedRadio = document.getElementById("select-field-status-accepted");
+                if (acceptedRadio) acceptedRadio.checked = true;
+            }
+
+            if (data.adults !== undefined && data.adults !== null) {
+                const adultsField = document.getElementById("select-field-adults");
+                if (adultsField) adultsField.value = data.adults;
+            }
+            if (data.children !== undefined && data.children !== null) {
+                const childrenField = document.getElementById("select-field-children");
+                if (childrenField) childrenField.value = data.children;
+            }
+            if (data.meal) {
+                const mealField = document.getElementById("select-field-meal");
+                if (mealField) mealField.value = data.meal;
+            }
+            if (data.phone) {
+                const phoneField = document.getElementById("input-field-phone");
+                if (phoneField) phoneField.value = data.phone;
+            }
+            if (data.email) {
+                const emailField = document.getElementById("input-field-email");
+                if (emailField) emailField.value = data.email;
+            }
+            if (data.message) {
+                const messageField = document.getElementById("textarea-field-message");
+                if (messageField) messageField.value = data.message;
+            }
+        }
+        prefillFormFromStoredResponse();
+
         // --- DATA DICTIONARY SYSTEM LAYER ---
         const languageDictionarySystem = {
             en: {
@@ -1905,7 +2014,7 @@
             }
         };
 
-        let activeSystemLanguage = "sw";
+        let activeSystemLanguage = "en";
         let capturedGlobalGuestIdentity = "Mgeni";
 
         // --- LIFE-CYCLE BOOT MANAGER ---
@@ -1917,6 +2026,7 @@
             initiateTargetCountdownEngine("2026-09-05T10:00:00");
             setupEventInteractions();
             triggerLanguageLoadSetup();
+            loadExistingGuestResponse();
 
             // Fire Loader Termination Sequence
             setTimeout(() => {
@@ -2029,6 +2139,24 @@
             }
             feather.replace();
         });
+
+        // --- CHANGE RESPONSE ENGINE (re-opens the editable form over the curtain) ---
+        // --- EVENT DELEGATION FOR CHANGE RESPONSE BUTTON ---
+document.addEventListener("click", function (event) {
+    const changeBtn = event.target.closest("#change-response-btn");
+
+    if (changeBtn) {
+        document.getElementById("rsvp-success-curtain-layer").style.display = "none";
+
+        const btnSubmit = document.getElementById("rsvp-submit-btn-copy");
+        if (btnSubmit) {
+            btnSubmit.disabled = false;
+            btnSubmit.innerText = activeSystemLanguage === "en"
+                ? "Lock Response Registry"
+                : "Thibitisha Nafasi Yako";
+        }
+    }
+});
 
         // --- LANGUAGE SWITCH OVERRIDE ENGINE ---
         const languageToggleBtn = document.getElementById("language-toggle");
@@ -2253,108 +2381,216 @@
         // }
 
         // --- FORM TRANSACTION MANAGEMENT PIPELINE (RSVP TO LARAVEL BACKEND) ---
-let payloadBackupObject = null;
+        let payloadBackupObject = null;
 
-function processRSVPSubmitPipeline(event) {
-
-
-    event.preventDefault();
-    const btnSubmit = document.getElementById("rsvp-submit-btn-copy");
-    const selectStatus = document.getElementById("select-field-status").value;
-
-    btnSubmit.innerText = activeSystemLanguage === "en" ? "TRANSMITTING..." : "INATUMA...";
-    btnSubmit.disabled = true;
-
-    // Compile Form Values
-    payloadBackupObject = {
-        guest_name: document.getElementById("input-field-name").value,
-        guest_app: document.getElementById("input-field-app").value,
-        guest_token: document.getElementById("input-field-token").value,
-        attendance: selectStatus,
-        adults: document.getElementById("select-field-adults").value,
-        children: document.getElementById("select-field-children").value,
-        meal: document.getElementById("select-field-meal").value,
-        phone: document.getElementById("input-field-phone").value,
-        email: document.getElementById("input-field-email").value,
-        message: document.getElementById("textarea-field-message").value,
-        uuidString: "INV-" + Math.floor(100000 + Math.random() * 900000)
-    };
-
-    // If the guest is declining, skip image generation and process directly
-    if (selectStatus !== "Accepted") {
-        finalizeSuccessfulRSVPUiState(null);
-        return;
-    }
-
-//  console.log(payloadBackupObject);
-//  return;
+        function processRSVPSubmitPipeline(event) {
 
 
+            event.preventDefault();
+            const btnSubmit = document.getElementById("rsvp-submit-btn-copy");
+            // const selectStatus = document.getElementById("select-field-status").value;
+            const selectStatus = document.querySelector('input[name="attendance_status"]:checked').value;
+            btnSubmit.innerText = activeSystemLanguage === "en" ? "TRANSMITTING..." : "INATUMA...";
+            btnSubmit.disabled = true;
+
+            // Compile Form Values
+            payloadBackupObject = {
+                guest_name: document.getElementById("input-field-name").value,
+                guest_app: document.getElementById("input-field-app").value,
+                guest_token: document.getElementById("input-field-token").value,
+                attendance: selectStatus,
+                adults: document.getElementById("select-field-adults").value,
+                children: document.getElementById("select-field-children").value,
+                meal: document.getElementById("select-field-meal").value,
+                phone: document.getElementById("input-field-phone").value,
+                email: document.getElementById("input-field-email").value,
+                message: document.getElementById("textarea-field-message").value,
+                uuidString: "INV-" + Math.floor(100000 + Math.random() * 900000)
+            };
+
+            // If the guest is declining, skip image generation and process directly
+            // if (selectStatus !== "Accepted") {
+            //     finalizeSuccessfulRSVPUiState(null);
+            //     return;
+            // }
+
+            //  console.log(payloadBackupObject);
+            //  return;
 
 
-    // Replace with your true Laravel Endpoint URL Route (e.g., '/api/rsvp/confirm')
-    const targetLaravelBackendUrl = "/generate";
 
-    fetch(targetLaravelBackendUrl, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "X-CSRF-TOKEN": '{{ csrf_token() }}' // Safely embedded Laravel CSRF token security layout
-        },
-        body: JSON.stringify(payloadBackupObject)
-    })
-    .then(response => {
-        if (!response.ok) throw new Error("Backend image validation failure.");
-        return response.json();
-    })
-    .then(data => {
-        // Expecting data structure payload: { success: true, base64_image: "data:image/png;base64,iVBORw..." }
-        finalizeSuccessfulRSVPUiState(data.base64_image);
-    })
-    .catch(err => {
-        console.error("Laravel processing error. Falling back safely.", err);
-        // Fallback display frame if backend crashes
-        finalizeSuccessfulRSVPUiState(null);
-    });
-}
 
-function finalizeSuccessfulRSVPUiState(base64ImageString) {
+            // Replace with your true Laravel Endpoint URL Route (e.g., '/api/rsvp/confirm')
+            const targetLaravelBackendUrl = "/generate";
+
+            fetch(targetLaravelBackendUrl, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-TOKEN": '{{ csrf_token() }}' // Safely embedded Laravel CSRF token security layout
+                    },
+                    body: JSON.stringify(payloadBackupObject)
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error("Backend image validation failure.");
+                    return response.json();
+                })
+                .then(data => {
+                    // console.log(data.generated['guest_name']);
+
+                    // Expecting data structure payload: { success: true, base64_image: "data:image/png;base64,iVBORw..." }
+
+                    finalizeSuccessfulRSVPUiState(
+                        selectStatus === "Accepted" ? data.generated[0]['image_url'] : null,
+                        selectStatus
+                    );
+                })
+                .catch(err => {
+                    console.error("Laravel processing error. Falling back safely.", err);
+                    // Fallback display frame if backend crashes
+                    finalizeSuccessfulRSVPUiState(null, selectStatus);
+                });
+        }
+
+//         function finalizeSuccessfulRSVPUiState(base64ImageString, status) {
+//             const successOverlay = document.getElementById("rsvp-success-curtain-layer");
+//             successOverlay.style.display = "flex";
+
+//             const isDeclined = status === "Declined";
+//             const acceptedBlock = document.getElementById("rsvp-status-accepted-block");
+//             const declinedBlock = document.getElementById("rsvp-status-declined-block");
+
+//             acceptedBlock.style.display = isDeclined ? "none" : "block";
+//             declinedBlock.style.display = isDeclined ? "block" : "none";
+
+//             if (isDeclined) {
+//                 // Words of appreciation only — no ticket/QR for a decline
+//                 feather.replace();
+//                 return;
+//             }
+
+//             // Generate QR Target Token Value inside web DOM element
+//             const qrcodeZone = document.getElementById("generated-qrcode-target");
+//             qrcodeZone.innerHTML = "";
+
+//             if (base64ImageString) {
+//     // Render the image, download button, and change response button together
+//     qrcodeZone.style.background = "transparent";
+//     qrcodeZone.style.border = "none";
+//     qrcodeZone.innerHTML = `
+//         <img src="${base64ImageString}" alt="Wedding Invitation Ticket" style="max-width: 100%; max-height: 220px; border-radius: 6px; box-shadow: var(--shadow-premium); border: 1px solid var(--primary-gold); object-fit: contain;">
+
+//         <div style="margin-top: 20px; display: flex; gap: 12px; justify-content: center; align-items: center; flex-wrap: wrap;">
+//             <a href="${base64ImageString}" download="Abel_Anlin_Wedding_Ticket.png" class="gold-button" style="text-decoration:none; display:inline-flex;">
+//                 <i data-feather="download" style="width:14px; margin-right:5px;"></i>
+//                 <span data-en="Download Invitation Ticket" data-sw="Pakua Kadi Yako">Download Invitation Ticket</span>
+//             </a>
+
+//             <button type="button" class="gold-button" id="change-response-btn">
+//                 <i data-feather="edit-2" style="width:14px; margin-right:5px;"></i>
+//                 <span data-en="Change Response" data-sw="Badilisha Jibu">Change Response</span>
+//             </button>
+//         </div>
+//     `;
+
+//     // Re-bind click listener for the dynamically rendered Change Response button
+//     document.getElementById("change-response-btn").addEventListener("click", () => {
+//         document.getElementById("rsvp-success-curtain-layer").style.display = "none";
+//         const btnSubmit = document.getElementById("rsvp-submit-btn-copy");
+//         if (btnSubmit) {
+//             btnSubmit.disabled = false;
+//             btnSubmit.innerText = activeSystemLanguage === "en" ? "Lock Response Registry" : "Thibitisha Nafasi Yako";
+//         }
+//     });
+// } else {
+//                 // Dynamic Fallback structure: standard default QRCode block build pattern
+//                 // new QRCode(qrcodeZone, {
+//                 //     text: `ID:${payloadBackupObject.uuidString}|NAME:${payloadBackupObject.guestName}|STATUS:${payloadBackupObject.attendance}`,
+//                 //     width: 130,
+//                 //     height: 130,
+//                 //     colorDark: "#2C2A29",
+//                 //     colorLight: "#ffffff"
+//                 // });
+//             }
+
+//             // Fire Luxury Confetti Streamers
+//             fireLuxuryConfettiExplosion(document.getElementById("rsvp-interface-container-node"));
+//             feather.replace();
+
+//             // Initialize Dynamic API Target Handles
+//             document.getElementById("whatsapp-share-trigger-btn").onclick = () => {
+//                 const waTextFormatted = encodeURIComponent(
+//                     `Habari!\nNime thibitisha mahudhurio yangu.\n\n*Jina:* ${payloadBackupObject.guestName}\n*Hali:* ${payloadBackupObject.attendance === 'Accepted' ? 'Nafika kwa Furaha' : 'Sitoweza kufika'}\n*Viti (Watu Wazima/Watoto):* ${payloadBackupObject.adults}/${payloadBackupObject.children}\n*Kadi ID:* ${payloadBackupObject.uuidString}\n\nTukutane siku ya sherehe!`
+//                 );
+//                 window.open(`https://api.whatsapp.com/send?phone=255684848851&text=${waTextFormatted}`, "_blank");
+//             };
+
+//             document.getElementById("calendar-reminder-btn").onclick = () => {
+//                 window.open(
+//                     "https://calendar.google.com/calendar/render?action=TEMPLATE&text=Abel+%26+Anlin+Wedding+Celebration&dates=20260905T100000Z/20260905T220000Z&details=Join+us+in+celebration+of+forever+alignment.&location=St.+Joseph&#39;s+Cathedral,+Dar+es+Salaam",
+//                     "_blank");
+//             };
+//         }
+
+
+function finalizeSuccessfulRSVPUiState(base64ImageString, status) {
     const successOverlay = document.getElementById("rsvp-success-curtain-layer");
     successOverlay.style.display = "flex";
 
-    // Generate QR Target Token Value inside web DOM element
+    const isDeclined = status === "Declined";
+    const acceptedBlock = document.getElementById("rsvp-status-accepted-block");
+    const declinedBlock = document.getElementById("rsvp-status-declined-block");
+
+    acceptedBlock.style.display = isDeclined ? "none" : "block";
+    declinedBlock.style.display = isDeclined ? "block" : "none";
+
+    // --- IF DECLINED ---
+    if (isDeclined) {
+        declinedBlock.innerHTML = `
+            <h3 data-en="Response Received" data-sw="Jibu Limepokelewa">Response Received</h3>
+            <p data-en="We're sorry you won't be able to join us, but we sincerely appreciate you taking the time to let us know. Thank you, and we hope to celebrate with you another time."
+               data-sw="Tunasikitika hutaweza kuja, lakini tunashukuru sana kwa kutujulisha. Asante, na tunatumaini kukutana nawe wakati mwingine.">
+               We're sorry you won't be able to join us, but we sincerely appreciate you taking the time to let us know. Thank you, and we hope to celebrate with you another time.
+            </p>
+            <div style="margin-top: 25px;">
+                <button type="button" class="gold-button" id="change-response-btn">
+                    <i data-feather="edit-2" style="width:14px; margin-right:5px;"></i>
+                    <span data-en="Change Response" data-sw="Badilisha Jibu">Change Response</span>
+                </button>
+            </div>
+        `;
+        feather.replace();
+        return;
+    }
+
+    // --- IF ACCEPTED ---
     const qrcodeZone = document.getElementById("generated-qrcode-target");
     qrcodeZone.innerHTML = "";
 
     if (base64ImageString) {
-        // Elegant implementation: Hide standard fallback QR and render the full ticket layout image
         qrcodeZone.style.background = "transparent";
         qrcodeZone.style.border = "none";
         qrcodeZone.innerHTML = `
-            <img src="${base64ImageString}" alt="Wedding Invitation Ticket" style="max-width: 100%; max-height: 280px; border-radius: 6px; box-shadow: var(--shadow-premium); border: 1px solid var(--primary-gold);">
-            <div style="margin-top: 15px;">
+            <img src="${base64ImageString}" alt="Wedding Invitation Ticket" style="max-width: 100%; max-height: 220px; border-radius: 6px; box-shadow: var(--shadow-premium); border: 1px solid var(--primary-gold); object-fit: contain;">
+
+            <div style="margin-top: 20px; display: flex; gap: 12px; justify-content: center; align-items: center; flex-wrap: wrap;">
                 <a href="${base64ImageString}" download="Abel_Anlin_Wedding_Ticket.png" class="gold-button" style="text-decoration:none; display:inline-flex;">
                     <i data-feather="download" style="width:14px; margin-right:5px;"></i>
-                    <span data-en="Download Invitation Ticket" data-sw="Pakua Kadi Yako">Pakua Kadi Yako</span>
+                    <span data-en="Download Invitation Ticket" data-sw="Pakua Kadi Yako">Download Invitation Ticket</span>
                 </a>
+
+                <button type="button" class="gold-button" id="change-response-btn">
+                    <i data-feather="edit-2" style="width:14px; margin-right:5px;"></i>
+                    <span data-en="Change Response" data-sw="Badilisha Jibu">Change Response</span>
+                </button>
             </div>
         `;
-    } else {
-        // Dynamic Fallback structure: standard default QRCode block build pattern
-        new QRCode(qrcodeZone, {
-            text: `ID:${payloadBackupObject.uuidString}|NAME:${payloadBackupObject.guestName}|STATUS:${payloadBackupObject.attendance}`,
-            width: 130,
-            height: 130,
-            colorDark: "#2C2A29",
-            colorLight: "#ffffff"
-        });
     }
 
-    // Fire Luxury Confetti Streamers
     fireLuxuryConfettiExplosion(document.getElementById("rsvp-interface-container-node"));
     feather.replace();
 
-    // Initialize Dynamic API Target Handles
+    // Attach API Target Handles (WhatsApp, Calendar)
     document.getElementById("whatsapp-share-trigger-btn").onclick = () => {
         const waTextFormatted = encodeURIComponent(
             `Habari!\nNime thibitisha mahudhurio yangu.\n\n*Jina:* ${payloadBackupObject.guestName}\n*Hali:* ${payloadBackupObject.attendance === 'Accepted' ? 'Nafika kwa Furaha' : 'Sitoweza kufika'}\n*Viti (Watu Wazima/Watoto):* ${payloadBackupObject.adults}/${payloadBackupObject.children}\n*Kadi ID:* ${payloadBackupObject.uuidString}\n\nTukutane siku ya sherehe!`
@@ -2368,6 +2604,8 @@ function finalizeSuccessfulRSVPUiState(base64ImageString) {
             "_blank");
     };
 }
+
+
 
         function fireLuxuryConfettiExplosion(parentWrapper) {
             const customHexColors = ["#D4AF37", "#8A9A86", "#DCAEAC", "#AA8417", "#6B6661"];
@@ -2385,6 +2623,89 @@ function finalizeSuccessfulRSVPUiState(base64ImageString) {
                 setTimeout(() => conf.remove(), 3500);
             }
         }
+
+
+        // Extract the unique token from the URL path (e.g. /aa/VM0at2rdbJ -> VM0at2rdbJ)
+function getGuestTokenFromUrl() {
+    const pathSegments = window.location.pathname.split('/').filter(Boolean);
+    return pathSegments[pathSegments.length - 1]; // Gets 'VM0at2rdbJ'
+}
+
+// Fetch existing guest response on page initialization
+async function loadExistingGuestResponse() {
+    const token = getGuestTokenFromUrl();
+    if (!token) return;
+
+    try {
+        const response = await fetch(`/api/response/${token}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+        });
+
+        if (!response.ok) return;
+
+        const resData = await response.json();
+
+        // If the backend returns saved response data
+        if (resData && resData.data) {
+            populateFormFields(resData.data);
+
+            console.log(resData.data);
+
+            // If the guest has already responded, show their ticket/status screen immediately
+            if (resData.data.has_responded) {
+                finalizeSuccessfulRSVPUiState(
+                    resData.data.ticket_base64 || null,
+                    resData.data.attendance || "Accepted"
+                );
+            }
+        }
+    } catch (error) {
+        console.error("Error fetching guest RSVP data:", error);
+    }
+}
+
+function populateFormFields(data) {
+    if (!data) return;
+
+    // 1. Fill Text & Number Inputs
+    if (data.guest_name) {
+        const nameInput = document.getElementById("guest-name-input");
+        if (nameInput) nameInput.value = data.guest_name;
+    }
+
+    if (data.adults !== undefined) {
+        const adultsInput = document.getElementById("adults-count");
+        if (adultsInput) adultsInput.value = data.adults;
+    }
+
+    if (data.children !== undefined) {
+        const childrenInput = document.getElementById("children-count");
+        if (childrenInput) childrenInput.value = data.children;
+    }
+
+    if (data.dietary) {
+        const dietaryInput = document.getElementById("dietary-input");
+        if (dietaryInput) dietaryInput.value = data.dietary;
+    }
+
+    if (data.notes) {
+        const notesInput = document.getElementById("notes-input");
+        if (notesInput) notesInput.value = data.notes;
+    }
+
+    // 2. Select Attendance Radio Button
+    if (data.attendance) {
+        const radioBtn = document.querySelector(`input[name="attendance"][value="${data.attendance}"]`);
+        if (radioBtn) {
+            radioBtn.checked = true;
+            radioBtn.dispatchEvent(new Event("change")); // Trigger UI updates (e.g. toggling count fields)
+        }
+    }
+}
     </script>
 </body>
 

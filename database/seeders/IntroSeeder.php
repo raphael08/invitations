@@ -6,6 +6,7 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\EventType;
 use App\Models\Event;
+use App\Models\GoogleSheetSetting;
 
 class IntroSeeder extends Seeder
 {
@@ -37,6 +38,7 @@ class IntroSeeder extends Seeder
     "cover_image"=>"https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1920&q=80"
       ]);
 
-        
+      $sheet = GoogleSheetSetting::create(['event_id'=>1,'spreadsheet_id'=>'https://docs.google.com/spreadsheets/d/e/2PACX-1vTnZ2x_0RY84rQCBh0370B2FLYKvJ3Yi38Ae_eaReMOu-y4sMDvpW5IFwjSBrjc3vif4SGlGq_zLi5S/pub?gid=1493156283&single=true&output=csv']);
+
     }
 }
