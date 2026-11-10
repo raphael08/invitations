@@ -7,4 +7,5 @@ use Illuminate\Database\Eloquent\Model;
 class GoogleSheetSetting extends Model
 {
     //
+      protected $guarded = [''];
 }

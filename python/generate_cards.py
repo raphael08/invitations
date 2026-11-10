@@ -30,16 +30,16 @@ PUBLIC_FOLDER = os.path.join(PROJECT_DIR, "public")
 # QR_Y = 1172
 # QR_SIZE = 170
 
-NAME_Y = 650
+NAME_Y = 450
 
 # Start and end of the name line
 NAME_LINE_START_X = 318
 NAME_LINE_END_X = 680
 
 # QR position
-QR_X = 420
-QR_Y = 1270
-QR_SIZE = 160
+QR_X = 220
+QR_Y = 870
+QR_SIZE = 90
 
 # ==========================================
 # RECEIVE DATA
@@ -105,8 +105,7 @@ for row in guest_rows:
     )
 
     image_url = (
-        row["url"].rstrip("/")
-        + "/"
+        "/"
         + app
         + "/cards/"
         + filename

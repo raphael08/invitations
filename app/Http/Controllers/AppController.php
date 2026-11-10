@@ -11,6 +11,9 @@ use App\Models\Setting;
 use App\Models\GoogleSheetSetting;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\Process\Process;
+use Illuminate\Support\Facades\File;
+use ZipArchive;
+
 
 class AppController extends Controller
 {
@@ -20,6 +23,8 @@ class AppController extends Controller
     public function index($app)
     {
         $event = Event::where('app_name', $app)->firstOrFail();
+        // dd($event);
+
         $guests = Guest::with('response')->where('event_id', $event->id)->get();
         $guestIds = $guests->pluck('id')->toArray();
         $sheet = GoogleSheetSetting::where('event_id', $event->id)->first();
@@ -69,12 +74,13 @@ class AppController extends Controller
             $event = Event::where('app_name', $app)->firstOrFail();
 
 
-            // dd($request->all());
+            // dd($event,$request->all());
 
             foreach ($request->guests as $guest) {
 
 
-                $check = Guest::where('guest_code', $guest['guest_code'])->exists();
+                $check = Guest::where('guest_code', $guest['guest_code'])->where('event_id',$event->id)->exists();
+                // dd($check);
 
                 if (!$check) {
                     $invitation_token = Guest::generateCode(10);
@@ -141,6 +147,7 @@ class AppController extends Controller
             }
 
             $token = Guest::with('event')->where('event_id', $event->id)->where('invitation_token', $token)->first();
+            // dd($token);
             if (!$token) {
                 return response()->json([
                     'status' => false,
@@ -150,7 +157,7 @@ class AppController extends Controller
             }
 
             $token['url'] = Setting::first()->base_url;
-            return view('index', compact('token', 'app'));
+            return view('index', compact('token', 'app','event'));
 
 
             // DB::commit();
@@ -166,112 +173,217 @@ class AppController extends Controller
         }
     }
 
-    public function generate(Request $request)
-    {
-
-        // dd($request->all());
+    
+public function generate(Request $request)
+{
+    try {
+        // Get event and settings
         $event = Event::where('app_name', $request->guest_app)->first();
         $setting = Setting::first();
-        if ($request->filled('guest_token')) {
 
-            $guests = Guest::where('event_id', $event->id)->where('invitation_token', $request->guest_token)
-                ->get(['id', 'guest_name', 'invitation_token'])
-                ->toArray();
-        } elseif ($request->filled('guest_tokens')) {
-
-
-            // FIXED: Changed $request->guest_token to $request->guest_tokens to extract the incoming array properly
-            $tokens = Guest::whereIn('id', $request->guest_tokens)->get('invitation_token')->toArray();
-            // dd($tokens);
-            $guests = Guest::where('event_id', $event->id)->whereIn('invitation_token', $tokens)
-                ->get(['id', 'guest_name', 'invitation_token'])
-                ->toArray();
-
-            // dd($guests);
-
-            // if ($guests) {
-            //     $guests['app'] = $request->guest_app;
-            //     $guests['url'] = $setting->base_url;
-            // }
-        } else {
-
-            $guests = Guest::get(['id', 'guest_name', 'invitation_token'])
-                ->toArray();
-            if ($guests) {
-                $guests['app'] = $request->guest_app;
-                $guests['url'] = $setting->base_url;
-            }
-        }
-
-        // dd($guests);
-        if (!empty($guests)) {
-            foreach ($guests as &$guest) {
-                $guest['app'] = $request->guest_app;
-                $guest['url'] = $setting->base_url;
-            }
-            unset($guest); // Break references safely
-        }
-
-        // dd($guests);
-        // $python = '/usr/bin/python3';
-        $python = base_path('.venv/bin/python');
-        // or base_path('.venv/bin/python')
-
-
-        $script = base_path('python/generate_cards.py');
-
-
-        $process = new Process([
-            $python,
-            $script,
-            json_encode($guests)
-        ]);
-
-        $process->setTimeout(0);
-
-        $process->run();
-
-        // dd($process->getOutput());
-
-        if (!$process->isSuccessful()) {
-
-
-
+        if (!$event) {
             return response()->json([
                 'success' => false,
-                'error' => $process->getErrorOutput()
+                'error' => 'Event not found.',
+            ], 404);
+        }
+
+        if (!$setting) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Application settings not found.',
             ], 500);
         }
 
-        $generated = json_decode(
-            $process->getOutput(),
-            true
+        // Get guests based on the request
+        if ($request->filled('guest_token')) {
+
+            $guests = Guest::where('event_id', $event->id)
+                ->where('invitation_token', $request->guest_token)
+                ->get(['id', 'guest_name', 'invitation_token'])
+                ->toArray();
+
+        } elseif ($request->filled('guest_tokens')) {
+
+            $tokens = Guest::where('event_id', $event->id)
+                ->whereIn('guest_code', (array) $request->guest_tokens)
+                ->pluck('invitation_token')
+                ->toArray();
+
+            $guests = Guest::where('event_id', $event->id)
+                ->whereIn('invitation_token', $tokens)
+                ->get(['id', 'guest_name', 'invitation_token'])
+                ->toArray();
+
+        } else {
+
+            $guests = Guest::where('event_id', $event->id)
+                ->get(['id', 'guest_name', 'invitation_token'])
+                ->toArray();
+        }
+
+        if (empty($guests)) {
+            return response()->json([
+                'success' => false,
+                'error' => 'No guests found to generate invitation cards.',
+            ], 404);
+        }
+
+        // Add application details to each guest
+        foreach ($guests as &$guest) {
+            $guest['app'] = $request->guest_app;
+            $guest['url'] = $setting->base_url;
+        }
+        unset($guest);
+
+        // Detect operating system and select Python executable
+        if (PHP_OS_FAMILY === 'Linux') {
+
+            $python = base_path('.venv/bin/python');
+
+        } elseif (PHP_OS_FAMILY === 'Windows') {
+
+            $python = base_path('.venv-win\\Scripts\\python.exe');
+
+        } else {
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Unsupported operating system: ' . PHP_OS_FAMILY,
+            ], 500);
+        }
+
+        // Python script location
+        $script = base_path('python/generate_cards.py');
+
+        // Check Python executable
+        if (!file_exists($python)) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Python executable not found: ' . $python,
+            ], 500);
+        }
+
+        // Check Python script
+        if (!file_exists($script)) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Python script not found: ' . $script,
+            ], 500);
+        }
+
+        // Prepare JSON input for Python
+        $jsonGuests = json_encode(
+            $guests,
+            JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
         );
-        // dd($generated);
 
-        // dd(json_decode(json_encode($process->getOutput())));
+        if ($jsonGuests === false) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to encode guest data: ' . json_last_error_msg(),
+            ], 500);
+        }
 
+        // Execute Python script
+        $process = new Process([
+            $python,
+            $script,
+            $jsonGuests,
+        ]);
+
+        $process->setTimeout(null);
+        $process->run();
+
+        // Check Python execution result
+        if (!$process->isSuccessful()) {
+            return response()->json([
+                'success' => false,
+                'error' => $process->getErrorOutput()
+                    ?: 'Python execution failed.',
+                'output' => $process->getOutput(),
+                'exit_code' => $process->getExitCode(),
+            ], 500);
+        }
+
+        // Decode Python JSON output
+        $output = trim($process->getOutput());
+
+        $generated = json_decode($output, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE || !is_array($generated)) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Python returned invalid JSON: ' . json_last_error_msg(),
+                'output' => $output,
+            ], 500);
+        }
+
+        // Ensure Python returned generated cards
+        if (empty($generated)) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Python did not return any generated cards.',
+                'output' => $output,
+            ], 500);
+        }
+
+        // Update guest RSVP information
         foreach ($generated as $card) {
 
+            if (!isset($card['id'])) {
+                continue;
+            }
+
             Guest::where('id', $card['id'])
+                ->where('event_id', $event->id)
                 ->update([
-                    // 'invitation_image' => $card['image'],
                     'rsvp_status' => $request->attendance,
                 ]);
-            $check = Rsvp::where('guest_id', $card['id'])->latest()->first();
+
+            // Find the latest RSVP record for this guest
+            $check = Rsvp::where('guest_id', $card['id'])
+                ->latest()
+                ->first();
+
+            $rsvpData = [
+                'attendance' => $request->attendance,
+                'adults' => $request->adults,
+                'children' => $request->children,
+                'message' => $request->message,
+                'submitted_at' => now(),
+            ];
+
             if ($check) {
-                $check->update(['attendance' => $request->attendance, 'adults' => $request->adults, 'children' => $request->children, 'message' => $request->message, 'submitted_at' => now()]);
+
+                $check->update($rsvpData);
+
             } else {
 
-                Rsvp::create(['guest_id' => $card['id'], 'attendance' => $request->attendance, 'adults' => $request->adults, 'children' => $request->children, 'message' => $request->message, 'submitted_at' => now()]);
+                Rsvp::create(array_merge(
+                    ['guest_id' => $card['id']],
+                    $rsvpData
+                ));
             }
         }
 
+        // Return successful response
         return response()->json([
             'success' => true,
-            'generated' => $generated
+            'generated' => $generated,
         ]);
+
+    } catch (\Throwable $e) {
+
+        // Handle unexpected errors
+        return response()->json([
+            'success' => false,
+            'error' => $e->getMessage(),
+            'file' => config('app.debug') ? $e->getFile() : null,
+            'line' => config('app.debug') ? $e->getLine() : null,
+        ], 500);
     }
+}
 
     public function response($token)
     {
@@ -294,10 +406,238 @@ class AppController extends Controller
                 'adults'        => $guest->adults,
                 'children'      => $guest->children,
                 'notes'         => $guest->message,
-                'ticket_base64' => Setting::first()->base_url . '/' . $guests->event->app_name . '/cards/guest_' . $guests->id . '.png',
+                'ticket_base64' => '/' . $guests->event->app_name . '/cards/guest_' . $guests->id . '.png',
             ]
 
             //  var image_url = data.url + '/' + data.event.app_name + '/cards/' + 'guest_' + data.id + '.png';
         ]);
     }
+
+    public function downloadCards(Request $request)
+{
+    try {
+
+        $event = Event::where('app_name', $request->guest_app)->first();
+
+        if (!$event) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Event not found.'
+            ], 404);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Get Selected Guests
+        |--------------------------------------------------------------------------
+        */
+
+        if ($request->filled('guest_token')) {
+
+            $guests = Guest::where('event_id', $event->id)
+                ->where('invitation_token', $request->guest_token)
+                ->get([
+                    'id',
+                    'guest_name',
+                    'invitation_token'
+                ]);
+
+        } elseif ($request->filled('guest_tokens')) {
+
+            $guests = Guest::where('event_id', $event->id)
+                ->whereIn('guest_code', $request->guest_tokens)
+                ->get([
+                    'id',
+                    'guest_name',
+                    'invitation_token'
+                ]);
+
+        } else {
+
+            $guests = Guest::where('event_id', $event->id)
+                ->get([
+                    'id',
+                    'guest_name',
+                    'invitation_token'
+                ]);
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Check Guests
+        |--------------------------------------------------------------------------
+        */
+
+        if ($guests->isEmpty()) {
+
+            return response()->json([
+                'success' => false,
+                'message' => 'No guests found.'
+            ], 404);
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Cards Folder
+        |--------------------------------------------------------------------------
+        */
+
+        $cardsFolder = public_path($request->guest_app . '/cards');
+
+        if (!File::exists($cardsFolder)) {
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Cards folder does not exist.'
+            ], 404);
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Create ZIP
+        |--------------------------------------------------------------------------
+        */
+
+        $zipFileName = 'selected_cards_' . time() . '.zip';
+
+        $zipPath = storage_path('app/' . $zipFileName);
+
+        $zip = new ZipArchive();
+
+        if ($zip->open(
+            $zipPath,
+            ZipArchive::CREATE | ZipArchive::OVERWRITE
+        ) !== true) {
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Unable to create ZIP file.'
+            ], 500);
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Add Cards
+        |--------------------------------------------------------------------------
+        */
+
+        $addedFiles = 0;
+
+        foreach ($guests as $guest) {
+
+            // Actual file on server
+            $fileName = 'guest_' . $guest->id . '.png';
+
+            $filePath = $cardsFolder . '/' . $fileName;
+
+
+            if (File::exists($filePath)) {
+
+                /*
+                |--------------------------------------------------------------------------
+                | Create ZIP File Name From Guest Name
+                |--------------------------------------------------------------------------
+                */
+
+                $zipFileNameForGuest = strtolower($guest->guest_name);
+
+                // Replace & with "and"
+                $zipFileNameForGuest = str_replace(
+                    '&',
+                    'and',
+                    $zipFileNameForGuest
+                );
+
+                // Replace any non-alphanumeric characters with underscore
+                $zipFileNameForGuest = preg_replace(
+                    '/[^a-z0-9]+/',
+                    '_',
+                    $zipFileNameForGuest
+                );
+
+                // Remove underscores from beginning/end
+                $zipFileNameForGuest = trim(
+                    $zipFileNameForGuest,
+                    '_'
+                );
+
+                // Add PNG extension
+                $zipFileNameForGuest .= '.png';
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Add File To ZIP With Guest Name
+                |--------------------------------------------------------------------------
+                */
+
+                $zip->addFile(
+                    $filePath,
+                    $zipFileNameForGuest
+                );
+
+                $addedFiles++;
+            }
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Close ZIP
+        |--------------------------------------------------------------------------
+        */
+
+        $zip->close();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Check If Files Were Added
+        |--------------------------------------------------------------------------
+        */
+
+        if ($addedFiles === 0) {
+
+            if (File::exists($zipPath)) {
+                File::delete($zipPath);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'No card files were found for the selected guests.'
+            ], 404);
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Download ZIP
+        |--------------------------------------------------------------------------
+        */
+
+        return response()->download(
+            $zipPath,
+            $zipFileName,
+            [
+                'Content-Type' => 'application/zip'
+            ]
+        )->deleteFileAfterSend(true);
+
+
+    } catch (\Exception $e) {
+
+        return response()->json([
+            'success' => false,
+            'statusCode' => 500,
+            'message' => $e->getMessage()
+        ], 500);
+    }
+}
+
+
+
 }

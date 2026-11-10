@@ -1,14 +1,22 @@
 <!DOCTYPE html>
-<html lang="en" data-lang="en">
+<html lang="en" data-lang="en" data-theme="dark">
 
 <head>
+    <script>
+        // Apply saved theme immediately (before paint). First visit = dark.
+        (function () {
+            var t = 'dark';
+            try { t = localStorage.getItem('theme') || 'dark'; } catch (e) {}
+            document.documentElement.setAttribute('data-theme', t === 'light' ? 'light' : 'dark');
+        })();
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Abel & Anlin Wedding Invitation</title>
+    <title>{{$event->groom_name}} & {{$event->bride_name}} Wedding Invitation</title>
 
-    <meta name="description" content="Ungana nasi katika kusherehekea muungano wa Abel & Anlin.">
+    <meta name="description" content="Ungana nasi katika kusherehekea muungano wa {{$event->groom_name}} & {{$event->bride_name}}.">
 
-    <meta property="og:title" content="Abel & Anlin Wedding Invitation">
+    <meta property="og:title" content="{{$event->groom_name}} & {{$event->bride_name}} Wedding Invitation">
     <meta property="og:description" content="Celebrate our forever with us. Exclusive interactive digital invitation.">
     <meta property="og:image" content="https://rsvp.myvnc.com/images/image.jpg">
     {{-- <meta property="og:image:width" content="1200">
@@ -33,20 +41,20 @@
     <style>
         /* --- DESIGN SYSTEM & CSS VARIABLE TOKENS --- */
         :root {
-            --bg-ivory: #FDFBF7;
+            --bg-ivory: #FBF8F2;
             --bg-dark-mode: #121210;
-            --primary-gold: #D4AF37;
-            --dark-gold: #AA8417;
-            --light-gold: #F3E5AB;
-            --soft-beige: #F4EFE6;
-            --sage-green: #8A9A86;
-            --dusty-rose: #DCAEAC;
+            --primary-gold: #68734A; /* olive green accent */
+            --dark-gold: #3D472A;
+            --light-gold: #E8D8C2; /* champagne beige */
+            --soft-beige: #F0E8DC;
+            --sage-green: #68734A;
+            --dusty-rose: #8A3442; /* burgundy */
 
             /* Light Mode Default Layouts */
             --text-main: #2C2A29;
             --text-muted: #6B6661;
             --surface-glass: rgba(253, 251, 247, 0.75);
-            --border-glass: rgba(212, 175, 55, 0.25);
+            --border-glass: rgba(104, 115, 74, 0.28);
             --shadow-premium: 0 20px 50px rgba(44, 42, 41, 0.05);
 
             /* Fonts */
@@ -66,7 +74,7 @@
             --text-muted: #BDB7B0;
             --soft-beige: #1A1A18;
             --surface-glass: rgba(18, 18, 16, 0.8);
-            --border-glass: rgba(212, 175, 55, 0.35);
+            --border-glass: rgba(104, 115, 74, 0.42);
             --shadow-premium: 0 20px 50px rgba(0, 0, 0, 0.5);
         }
 
@@ -182,7 +190,7 @@
         .gold-button:hover {
             color: #fff !important;
             background: var(--primary-gold);
-            box-shadow: 0 10px 30px rgba(212, 175, 55, 0.3);
+            box-shadow: 0 10px 30px rgba(104, 115, 74, 0.28);
             transform: translateY(-2px);
         }
 
@@ -357,7 +365,7 @@
             position: relative;
             width: 520px;
             height: 360px;
-            background: #eadecd;
+            background: linear-gradient(135deg, #e8d8c2, #d6c2a8);
             box-shadow: 0 30px 70px rgba(0, 0, 0, 0.12);
             transform-style: preserve-3d;
             transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
@@ -373,7 +381,7 @@
             height: 0;
             border-left: 260px solid transparent;
             border-right: 260px solid transparent;
-            border-top: 190px solid #d4c3ad;
+            border-top: 190px solid #c8b398;
             transform-origin: top;
             transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.4s;
             z-index: 3;
@@ -385,14 +393,14 @@
             left: 230px;
             width: 60px;
             height: 60px;
-            background: radial-gradient(#b02525, #8a1717);
+            background: radial-gradient(#7A2635, #51151F);
             border-radius: 50%;
             z-index: 4;
             box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3), inset 0 2px 4px rgba(255, 255, 255, 0.2);
             display: flex;
             justify-content: center;
             align-items: center;
-            color: #f2c7c7;
+            color: #F4E9DF;
             font-family: var(--font-display);
             font-size: 0.9rem;
             font-weight: bold;
@@ -425,7 +433,7 @@
             padding: 40px 20px;
             text-align: center;
             z-index: 2;
-            box-shadow: inset 0 0 40px rgba(212, 175, 55, 0.05);
+            box-shadow: inset 0 0 40px rgba(104, 115, 74, 0.07);
             transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.8s;
             display: flex;
             flex-direction: column;
@@ -525,7 +533,7 @@
         .dock-link:hover,
         .dock-link.active {
             opacity: 1;
-            background: rgba(212, 175, 55, 0.12);
+            background: rgba(104, 115, 74, 0.14);
             color: var(--primary-gold);
         }
 
@@ -866,11 +874,11 @@
         #countdown-anchor {
             background: var(--soft-beige);
             width: 100vw;
-            position: relative;
-            left: 50%;
-            right: 50%;
-            margin-left: -50vw;
-            margin-right: -50vw;
+            /* position: relative; */
+            /* left: 50%;
+            right: 50%; */
+            /* margin-left: -50vw;
+            margin-right: -50vw; */
         }
 
         .countdown-flex-container {
@@ -998,76 +1006,129 @@
             gap: 15px;
         }
 
-        /* --- DRESS CODE MANUAL --- */
+        /* --- WEDDING DRESS CODE: BURGUNDY, OLIVE, CAMEL & BLACK --- */
         #dress-code-center {
-            background: var(--soft-beige);
-            width: 100vw;
+            width: 100%;
             position: relative;
-            left: 50%;
-            right: 50%;
-            margin-left: -50vw;
-            margin-right: -50vw;
+            overflow: hidden;
+            color: #fff;
+            isolation: isolate;
+            background:
+                radial-gradient(circle at 12% 15%, rgba(122, 38, 53, .34), transparent 32%),
+                radial-gradient(circle at 90% 80%, rgba(104, 115, 74, .28), transparent 35%),
+                linear-gradient(135deg, #171915 0%, #24231e 48%, #191816 100%);
+            border: 1px solid rgba(232,216,194,.24);
+            box-shadow: 0 28px 80px rgba(23,25,21,.2);
         }
-
-        .dress-editorial-container {
-            display: flex;
-            justify-content: center;
-            gap: 50px;
-            flex-wrap: wrap;
-            margin-top: 50px;
+        #dress-code-center::before,
+        #dress-code-center::after {
+            content: "";
+            position: absolute;
+            pointer-events: none;
+            z-index: -1;
+            border: 1px solid rgba(232,216,194,.2);
+            border-radius: 50%;
         }
-
-        .dress-profile-card {
-            padding: 40px;
-            width: 360px;
-            text-align: center;
+        #dress-code-center::before { width: 360px; height: 360px; top: -220px; right: -100px; }
+        #dress-code-center::after { width: 280px; height: 280px; bottom: -190px; left: -80px; }
+        #dress-code-center .section-header-block { margin-bottom: 42px; }
+        #dress-code-center .section-header-block h2 {
+            color: #F6EFE6;
+            font-size: clamp(2rem, 4vw, 3rem);
+            letter-spacing: 4px;
         }
-
-        .dress-profile-card h3 {
-            font-size: 1.5rem;
-            margin-bottom: 25px;
-            position: relative;
-            letter-spacing: 2px;
+        #dress-code-center .section-header-block h2::after {
+            background: linear-gradient(90deg, #7A2635, #E8D8C2, #68734A);
+            height: 3px; width: 90px; left: calc(50% - 45px);
         }
-
-        .dress-profile-card p {
-            font-size: 1.2rem;
-            color: var(--text-muted);
-            margin-bottom: 25px;
+        #dress-code-center .section-header-block p { color: #D9CBB9; }
+        #dress-code-center .dress-code-intro {
+            max-width: 650px;
+            margin: 12px auto 0;
+            font-family: var(--font-sans);
+            font-size: .82rem;
+            line-height: 1.9;
+            color: rgba(255,255,255,.78);
         }
-
+        .dress-palette-group {
+            margin: 0 auto 30px;
+            max-width: 850px;
+            padding: 24px 20px 26px;
+            border: 1px solid rgba(232,216,194,.16);
+            border-radius: 16px;
+            background: rgba(255,255,255,.035);
+            backdrop-filter: blur(8px);
+        }
+        .dress-palette-label {
+            font-family: var(--font-sans);
+            text-transform: uppercase;
+            letter-spacing: 2.5px;
+            font-size: .72rem;
+            color: #E8D8C2;
+            margin-bottom: 22px;
+        }
         .color-palette-row {
             display: flex;
             justify-content: center;
-            gap: 20px;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 20px 30px;
         }
-
+        .color-swatch-item { width: 88px; text-align: center; }
         .color-swatch-circle {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            border: 1px solid rgba(0, 0, 0, 0.08);
-            box-shadow: var(--shadow-premium);
-            position: relative;
-            cursor: pointer;
+            width: 62px; height: 62px; display: block;
+            margin: 0 auto 10px; border-radius: 50%;
+            border: 3px solid rgba(255,255,255,.82);
+            box-shadow: 0 0 0 5px rgba(255,255,255,.055), 0 10px 25px rgba(0,0,0,.3);
+            transition: transform .25s ease, box-shadow .25s ease;
         }
-
-        .color-swatch-circle::after {
-            content: attr(data-swatch-name);
-            position: absolute;
-            bottom: -30px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-family: var(--font-sans);
-            font-size: 0.65rem;
-            text-transform: uppercase;
-            white-space: nowrap;
-            opacity: 0;
-            transition: var(--transition-fast);
+        .color-swatch-item:hover .color-swatch-circle {
+            transform: translateY(-4px) scale(1.06);
+            box-shadow: 0 0 0 6px rgba(232,216,194,.12), 0 14px 30px rgba(0,0,0,.4);
         }
-
-        .color-swatch-circle:hover::after {
-            opacity: 0.8;
+        .color-swatch-name {
+            display: block; font-family: var(--font-sans);
+            font-size: .67rem; line-height: 1.45; color: #F7F1E9;
+        }
+        .dress-code-note {
+            max-width: 760px; margin: 0 auto; padding: 16px 22px;
+            border-left: 3px solid #68734A; border-right: 3px solid #7A2635;
+            background: rgba(255,255,255,.045); color: #E9E0D5;
+            text-align: center; font-family: var(--font-sans);
+            font-size: .76rem; line-height: 1.8;
+        }
+        .dress-editorial-container {
+            display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 18px; max-width: 1040px; margin: 38px auto 0;
+        }
+        .dress-look-card {
+            min-width: 0; overflow: hidden; border-radius: 12px;
+            background: #F7F2EA; color: #292522;
+            box-shadow: 0 16px 35px rgba(0,0,0,.3);
+            transition: transform .35s ease, box-shadow .35s ease;
+            border: 1px solid rgba(232,216,194,.55);
+        }
+        .dress-look-card:hover { transform: translateY(-7px); box-shadow: 0 24px 45px rgba(0,0,0,.38); }
+        .dress-look-card img { width: 100%; height: 225px; object-fit: cover; display: block; }
+        .dress-look-caption { padding: 16px 10px 18px; text-align: center; min-height: 85px; }
+        .dress-look-caption strong {
+            display: block; font-family: var(--font-display);
+            font-size: .78rem; letter-spacing: 1px; margin-bottom: 7px; color: #34372A;
+        }
+        .dress-look-caption span { font-family: var(--font-sans); font-size: .67rem; color: #6b625c; line-height: 1.6; }
+        @media (max-width: 760px) {
+            #dress-code-center { padding: 56px 16px !important; }
+            .dress-palette-group { padding: 20px 12px; }
+            .dress-editorial-container { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; }
+            .dress-look-card img { height: 205px; }
+            .color-swatch-circle { width: 51px; height: 51px; }
+            .color-swatch-item { width: 70px; }
+        }
+        @media (max-width: 380px) {
+            .dress-editorial-container { grid-template-columns: 1fr 1fr; }
+            .dress-look-card img { height: 155px; }
+            .dress-look-caption { padding: 12px 7px 14px; }
+            .dress-look-caption strong { font-size: .68rem; }
         }
 
         /* --- GIFT REGISTRY STATIONS --- */
@@ -1383,17 +1444,189 @@
                 flex-direction: column;
             }
         }
+
+
+        /* --- CINEMATIC OLIVE, BURGUNDY & CHAMPAGNE VISUAL UPGRADE --- */
+        :root {
+            --primary-gold: #788456;
+            --dark-gold: #414b2d;
+            --light-gold: #e8d8c2;
+            --dusty-rose: #8a3442;
+            --shadow-premium: 0 24px 70px rgba(44, 36, 29, .12);
+        }
+
+        body {
+            background-image:
+                radial-gradient(ellipse at 8% 12%, rgba(120,132,86,.12), transparent 32%),
+                radial-gradient(ellipse at 92% 36%, rgba(138,52,66,.09), transparent 34%),
+                linear-gradient(135deg, rgba(255,255,255,.22), transparent 55%);
+            background-attachment: fixed;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            opacity: .3;
+            background-image: radial-gradient(rgba(120,132,86,.22) .7px, transparent .7px);
+            background-size: 22px 22px;
+            mask-image: linear-gradient(to bottom, black, transparent 85%);
+        }
+
+        .ambient-universe { z-index: 4; overflow: hidden; }
+        .petal {
+            background: linear-gradient(135deg, rgba(138,52,66,.85), rgba(232,216,194,.8) 55%, rgba(120,132,86,.8));
+            box-shadow: 0 0 14px rgba(232,216,194,.22);
+            opacity: .32;
+            filter: blur(.15px);
+        }
+        .gold-dust {
+            background: #d8c29f;
+            box-shadow: 0 0 9px rgba(232,216,194,.9), 0 0 18px rgba(120,132,86,.35);
+        }
+
+        #hero-viewport {
+            min-height: 680px;
+            isolation: isolate;
+            background: #171813;
+        }
+        .hero-parallax-bg {
+            inset: -3%;
+            width: 106%;
+            height: 106%;
+            transform: scale(1.08);
+            filter: saturate(.82) contrast(1.04);
+            animation: heroSlowZoom 24s ease-in-out infinite alternate;
+        }
+        #hero-viewport::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            background:
+                linear-gradient(115deg, rgba(28,35,20,.74), transparent 48%, rgba(83,25,36,.45)),
+                linear-gradient(to top, rgba(12,13,10,.68), transparent 48%);
+        }
+        #hero-viewport::after {
+            content: "";
+            position: absolute;
+            inset: 18px;
+            border: 1px solid rgba(232,216,194,.42);
+            outline: 1px solid rgba(232,216,194,.15);
+            outline-offset: 7px;
+            pointer-events: none;
+            z-index: 1;
+        }
+        .hero-content-house { position: relative; z-index: 2; animation: heroTextReveal 1.35s cubic-bezier(.2,.7,.2,1) both; }
+        .hero-content-house h1 {
+            text-shadow: 0 8px 35px rgba(0,0,0,.45);
+            background: linear-gradient(100deg, #fffaf0 8%, #e8d8c2 48%, #fff 72%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hero-content-house .ampersand-divider { color: #d9bca0; }
+
+        section:not(#hero-viewport) {
+            isolation: isolate;
+        }
+        section:not(#hero-viewport)::before {
+            content: "";
+            position: absolute;
+            width: 240px;
+            height: 240px;
+            top: 32px;
+            right: -95px;
+            z-index: -1;
+            border-radius: 50%;
+            border: 1px solid rgba(120,132,86,.15);
+            box-shadow: 0 0 0 22px rgba(120,132,86,.025), 0 0 0 48px rgba(138,52,66,.025);
+            pointer-events: none;
+            animation: ringDrift 18s linear infinite;
+        }
+        .glass-card {
+            border-radius: 20px;
+            border-color: rgba(120,132,86,.23);
+            box-shadow: 0 18px 55px rgba(38,35,27,.08), inset 0 1px rgba(255,255,255,.45);
+            backdrop-filter: blur(18px) saturate(1.12);
+        }
+        .glass-card:hover {
+            transform: translateY(-7px) scale(1.008);
+            box-shadow: 0 28px 65px rgba(38,35,27,.14);
+        }
+        .gold-button, button:not(.utility-btn) {
+            transition: transform .28s ease, box-shadow .28s ease, filter .28s ease;
+        }
+        .gold-button:hover, button:not(.utility-btn):hover {
+            filter: brightness(1.04);
+            box-shadow: 0 9px 28px rgba(104,115,74,.22);
+        }
+        #scroll-progress-indicator {
+            background: linear-gradient(90deg, #68734a, #e8d8c2, #8a3442);
+            box-shadow: 0 0 12px rgba(120,132,86,.42);
+        }
+        .system-utilities-tray { backdrop-filter: blur(16px); }
+        .utility-btn {
+            border: 1px solid rgba(232,216,194,.42) !important;
+            box-shadow: 0 8px 25px rgba(0,0,0,.13);
+            transition: transform .25s ease, background .25s ease;
+        }
+        .utility-btn:hover { transform: translateY(-3px) rotate(-3deg); }
+
+        @keyframes heroSlowZoom {
+            from { transform: scale(1.08) translate3d(-.5%, 0, 0); }
+            to { transform: scale(1.17) translate3d(.5%, -1%, 0); }
+        }
+        @keyframes heroTextReveal {
+            from { opacity: 0; transform: translateY(26px); filter: blur(7px); }
+            to { opacity: 1; transform: translateY(0); filter: blur(0); }
+        }
+        @keyframes ringDrift { to { transform: rotate(360deg); } }
+
+        [data-theme="dark"] body,
+        body:has([data-theme="dark"]) {
+            background-image:
+                radial-gradient(ellipse at 12% 8%, rgba(104,115,74,.16), transparent 35%),
+                radial-gradient(ellipse at 90% 42%, rgba(138,52,66,.13), transparent 34%),
+                linear-gradient(135deg, rgba(255,255,255,.015), transparent 60%);
+        }
+        [data-theme="dark"] .glass-card {
+            background: rgba(24,25,21,.78);
+            border-color: rgba(120,132,86,.32);
+            box-shadow: 0 22px 60px rgba(0,0,0,.24), inset 0 1px rgba(255,255,255,.035);
+        }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: .01ms !important;
+                animation-iteration-count: 1 !important;
+                scroll-behavior: auto !important;
+                transition-duration: .01ms !important;
+            }
+        }
+        @media (max-width: 768px) {
+            #hero-viewport { min-height: 620px; }
+            #hero-viewport::after { inset: 10px; outline-offset: 4px; }
+            .hero-content-house h1 { font-size: clamp(2.6rem, 11vw, 4rem); }
+            section:not(#hero-viewport)::before { width: 150px; height: 150px; right: -75px; }
+        }
+
     </style>
 </head>
 
 <body>
-
+@php
+            $date = \Carbon\Carbon::parse($event->event_date);
+            $eve = $date->format('d') . ' ' . strtoupper($date->format('F')) . ' ' . $date->format('Y');
+        @endphp
     <!-- Ambient Environment Matrix -->
     <div class="ambient-universe" id="ambient-particle-space"></div>
 
     <!-- Hidden Core Audio Frame -->
     <audio id="core-audio-element" loop preload="auto">
-        <source src="music.mp3" type="audio/mpeg">
+        <source src="/music.mp3" type="audio/mpeg">
     </audio>
 
     <!-- Scroll Progress Indicator -->
@@ -1405,7 +1638,7 @@
             <span style="font-family: var(--font-sans); font-size: 0.75rem; font-weight: 600;">EN</span>
         </button>
         <button class="utility-btn" id="theme-toggle" title="Toggle Appearance Profile">
-            <i data-feather="moon"></i>
+            <i data-feather="sun"></i>
         </button>
         <button class="utility-btn" id="audio-state-control" title="Toggle Soundscape Ambient">
             <i data-feather="music"></i>
@@ -1414,7 +1647,7 @@
 
     <!-- Apple-Inspired Entry Loader Sequence -->
     <div id="luxury-loader">
-        <div class="monogram-loader">A &bull; A</div>
+        <div class="monogram-loader">{{ ucfirst($event->groom_name[0]) }} &bull; {{ ucfirst($event->bride_name[0]) }}</div>
         <div class="skeleton-bar">
             <div class="skeleton-progress"></div>
         </div>
@@ -1424,14 +1657,14 @@
     <div id="envelope-wrapper">
         <div class="envelope-3d" id="interactive-envelope-node">
             <div class="envelope-flap"></div>
-            <div class="wax-seal-wrapper">A&A</div>
+            <div class="wax-seal-wrapper">{{ ucfirst($event->groom_name[0]) }} & {{ ucfirst($event->bride_name[0]) }}</div>
             <div class="invitation-inner-card">
                 <h4
                     style="font-family: var(--font-display); color: var(--primary-gold); letter-spacing: 3px; font-size: 0.8rem;">
                     THE CELEBRATION INVITATION</h4>
                 <h2
                     style="font-family: var(--font-accent); font-style: italic; font-size: 2.6rem; margin: 20px 0 10px 0; font-weight: 400;">
-                    Abel & Anlin</h2>
+                    {{$event->groom_name}} & {{$event->bride_name}}</h2>
                 <p style="font-size: 1.1rem; font-style: italic; opacity: 0.7; margin-bottom: 20px;"
                     data-en="Click Seal to Open Experience" data-sw="Bonyeza Nta Kufungua Mwaliko">Bonyeza Nta Kufungua
                     Mwaliko</p>
@@ -1459,9 +1692,9 @@
             <div class="hero-content-house">
                 <h3 data-en="The Celestial Wedding Invitation" data-sw="Mwaliko Rasmi Wa Harusi">Mwaliko Rasmi Wa
                     Harusi</h3>
-                <h1>Abel & Anlin</h1>
+                <h1>{{$event->groom_name}} & {{$event->bride_name}}</h1>
                 <span class="ampersand-divider"></span>
-                <p class="date-string">05 &bull; SEPTEMBER &bull; 2026</p>
+                <p class="date-string">{{ $eve }}</p>
                 <p class="poetic-quote">"Two souls with but a single thought, two hearts that beat as one."</p>
             </div>
         </header>
@@ -1523,7 +1756,7 @@
                     <div class="story-inner-card glass-card">
                         <img src="https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?auto=format&fit=crop&w=600&q=80"
                             alt="The Proposal">
-                        <span class="meta-date">SEPTEMBER 05, 2026</span>
+                        <span class="meta-date">{{ $eve }}</span>
                         <h3 data-en="The Sovereign Infinity Yes" data-sw="Mkataba wa Milele">Mkataba wa Milele</h3>
                         <p data-en="Beneath an expansive canopy of light projections, a lifelong query received its infinite answer."
                             data-sw="Chini ya dari kubwa ya makadirio ya mwanga, swali la maisha litapata jibu lake la milele.">
@@ -1648,21 +1881,19 @@
                 <div class="venue-editorial-card glass-card reveal">
                     <div>
                         <h3 data-en="Sacred Covenant Site" data-sw="Eneo la Ibada">Eneo la Ibada</h3>
-                        <p>K.K.K.T USHARIKA WA ARUSHA MJINI CATHEDRAL
-                            <i>MJINI KATI, Goliondoi Rd, Arusha 23102</i>
+                        <p>Evangelistic Assemblies of God of Tanzania (EAGT)
+                            <i>MOROMBO, Arusha</i><br>
+                            <en>12:00 Noon</en>
                         </p>
                         <div class="interactive-iframe-holder">
-                            <iframe
-                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3982.911766115915!2d36.6933442!3d-3.3717429!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x18371d183e4cade1%3A0x811721e8f5db64af!2sK.K.K.T%20USHARIKA%20WA%20ARUSHA%20MJINI%20CATHEDRAL!5e0!3m2!1ssw!2stz!4v1783772705253!5m2!1ssw!2stz"
-                                width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy"
-                                referrerpolicy="strict-origin-when-cross-origin"></iframe>
+                            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3982.917910537401!2d36.654554109874354!3d-3.370242296590269!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x18371d6004e7125d%3A0xeeb184ecbe6d52eb!2sEAGT%20Majengo!5e0!3m2!1sen!2stz!4v1793187237116!5m2!1sen!2stz" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
                         </div>
                     </div>
                     <div class="venue-button-group">
-                        <a href="https://maps.app.goo.gl/rKnwwL1xqUVNHXe99" target="_blank" class="gold-button"><i
+                        <a href="https://maps.app.goo.gl/tJS4t66ZT6j8gi6o9" target="_blank" class="gold-button"><i
                                 data-feather="navigation" style="width:14px;"></i> Navigation</a>
                         <button class="gold-button copy-address-btn"
-                            data-address="https://maps.app.goo.gl/rKnwwL1xqUVNHXe99L"><i data-feather="copy"
+                            data-address="https://maps.app.goo.gl/tJS4t66ZT6j8gi6o9"><i data-feather="copy"
                                 style="width:14px;"></i> <span data-en="Copy" data-sw="Nakili">Nakili</span></button>
                     </div>
                 </div>
@@ -1670,67 +1901,28 @@
                 <div class="venue-editorial-card glass-card reveal">
                     <div>
                         <h3 data-en="The Reception Gala Grounds" data-sw="Ukumbi wa Sherehe">Ukumbi wa Sherehe</h3>
-                        <p>Holy Family Gardens Njiro</p>
+                        <p>Arusha Mall</p>
+                        <p><en>6:00pm</en></p>
                         <div class="interactive-iframe-holder">
-                            <iframe
-                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3982.7223264149034!2d36.70283247312996!3d-3.4176853416666444!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x18371ba562623bb5%3A0xe8da3f63915760b2!2sHoly%20Family%20Gardens%20Njiro!5e0!3m2!1ssw!2stz!4v1783791360608!5m2!1ssw!2stz"
-                                width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy"
-                                referrerpolicy="strict-origin-when-cross-origin"></iframe>
+                            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3982.925812846369!2d36.67756620987422!3d-3.3683113965922!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x18371d40d3b1a38d%3A0x424e4211533b427c!2sArusha%20Mall!5e0!3m2!1sen!2stz!4v1793187454392!5m2!1sen!2stz" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
                         </div>
                     </div>
                     <div class="venue-button-group">
-                        <a href="https://maps.app.goo.gl/UsUkEuGXxQg3tWRt6" target="_blank" class="gold-button"><i
+                        <a href="https://maps.app.goo.gl/xs3TKenk63wbo1Qe6" target="_blank" class="gold-button"><i
                                 data-feather="navigation" style="width:14px;"></i> Navigation</a>
                         <button class="gold-button copy-address-btn"
-                            data-address="https://maps.app.goo.gl/UsUkEuGXxQg3tWRt6"><i data-feather="copy"
+                            data-address="https://maps.app.goo.gl/xs3TKenk63wbo1Qe6"><i data-feather="copy"
                                 style="width:14px;"></i> <span data-en="Copy" data-sw="Nakili">Nakili</span></button>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Section: Luxury Dress Code Specifications Guide -->
-        <section id="dress-code-center" class="reveal" style="display: none;">
-            <div class="section-header-block">
-                <h2 data-en="Attire Protocols" data-sw="Itifaki ya Mavazi">Itifaki ya Mavazi</h2>
-                <p data-en="Visual standard for a cohesive aesthetic layout"
-                    data-sw="Kiwango cha kuona kwa mpangilio mzuri wa pamoja">Kiwango cha kuona kwa mpangilio mzuri wa
-                    pamoja</p>
-            </div>
-
-            <div class="dress-editorial-container">
-                <div class="dress-profile-card glass-card">
-                    <h3 data-en="Ladies Palette" data-sw="Mavazi ya Kina Dada">Mavazi ya Kina Dada</h3>
-                    <p data-en="Floor-length luxury gala attire, fluid textiles, or sophisticated luxury tailored sets."
-                        data-sw="Mavazi ya sherehe ya urefu wa sakafu, vitambaa vya mtiririko, au seti za kisasa zilizoshonwa kifahari.">
-                    </p>
-                    <div class="color-palette-row">
-                        <div class="color-swatch-circle" style="background: #F4EFE6;" data-swatch-name="Beige"></div>
-                        <div class="color-swatch-circle" style="background: #EADECD;" data-swatch-name="Champagne">
-                        </div>
-                        <div class="color-swatch-circle" style="background: #DCAEAC;" data-swatch-name="Rose"></div>
-                    </div>
-                </div>
-
-                <div class="dress-profile-card glass-card">
-                    <h3 data-en="Gentlemen Profile" data-sw="Mavazi ya Kina Kaka">Mavazi ya Kina Kaka</h3>
-                    <p data-en="Sharp luxury tailored black suits, elegant traditional wear, or clean premium tuxedos."
-                        data-sw="Suti nyeusi zilizoshonwa vizuri za kisasa, mavazi ya kitamaduni ya kifahari, au tuxedo safi za malipo.">
-                    </p>
-                    <div class="color-palette-row">
-                        <div class="color-swatch-circle" style="background: #2C2A29;" data-swatch-name="Black Onyx">
-                        </div>
-                        <div class="color-swatch-circle" style="background: #8A9A86;" data-swatch-name="Sage Green">
-                        </div>
-                        <div class="color-swatch-circle" style="background: #D4AF37;" data-swatch-name="Gold Accent">
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
+        <!-- Section: Wedding Dress Code -->
+        
 
         <!-- Section: Gift Registry Intermediary Platform -->
-        <section id="gift-registry-station" style="display: none;">
+        <section id="gift-registry-station" style="display: ;">
             <div class="section-header-block reveal">
                 <h2 data-en="Love Registry" data-sw="Mfuko wa Baraka">Mfuko wa Baraka</h2>
                 <p data-en="Support options for our foundational home assets"
@@ -1746,22 +1938,76 @@
                 <div class="registry-flex-channels">
                     <div class="registry-channel-unit">
                         <h4 data-en="Mobile Payments" data-sw="Malipo ya Simu">Malipo ya Simu</h4>
-                        <code>M-Pesa Lipa: 5443322</code>
-                        <button class="gold-button copy-registry-btn" data-copyval="5443322" data-en="Copy Key"
+                        <code>Mixx By Yas: 0672979591</code><i>Hans Mfinanga</i>
+                        <button class="gold-button copy-registry-btn" data-copyval="0672979591" data-en="Copy Key"
                             data-sw="Nakili">Nakili</button>
                     </div>
                     <div class="registry-channel-unit">
                         <h4 data-en="Banking Pipeline" data-sw="Akaunti ya Benki">Akaunti ya Benki</h4>
-                        <code>CRDB Bank: 0152899304400</code>
-                        <button class="gold-button copy-registry-btn" data-copyval="0152899304400"
+                        <code>NMB Bank: 20310048151</code><i>Hans Mfinanga</i>
+                        <button class="gold-button copy-registry-btn" data-copyval="20310048151"
                             data-en="Copy Account" data-sw="Nakili">Nakili</button>
                     </div>
+                    
                 </div>
+            </div>
+        </section>
+        <section id="dress-code-center" class="reveal mx-auto" style="width: 100% !important; align-items: center; border-color: var(--border-glass); border-width: 1px; border-style: solid; padding: 40px 20px; margin-top: 40px; border-radius: 8px;">
+            <div class="section-header-block reveal">
+                <h2 data-en="The Dress Code" data-sw="Mavazi ya Sherehe">The Dress Code</h2>
+                <p class="dress-code-intro"
+                    data-en="A celebration deserves its finest — kindly dress in elegant, formal attire."
+                    data-sw="Sherehe hii inastahili mavazi bora — tafadhali vaa mavazi rasmi na ya kifahari.">
+                    A celebration deserves its finest — kindly dress in elegant, formal attire.
+                </p>
+            </div>
+
+            <div class="dress-palette-group">
+                <div class="dress-palette-label" data-en="Ladies · Elegant Gowns" data-sw="Kina dada · Gauni za kifahari">Ladies · Elegant Gowns</div>
+                <div class="color-palette-row">
+                    <div class="color-swatch-item"><span class="color-swatch-circle" style="background:#51151F;"></span><span class="color-swatch-name">Merlot / Burgundy</span></div>
+                    <div class="color-swatch-item"><span class="color-swatch-circle" style="background:#535B39;"></span><span class="color-swatch-name">Olive Green</span></div>
+                </div>
+            </div>
+
+            <div class="dress-palette-group">
+                <div class="dress-palette-label" data-en="Gentlemen · Formal Suits" data-sw="Kina kaka · Suti rasmi">Gentlemen · Formal Suits</div>
+                <div class="color-palette-row">
+                    <div class="color-swatch-item"><span class="color-swatch-circle" style="background:#B99A78;"></span><span class="color-swatch-name">Camel</span></div>
+                    <div class="color-swatch-item"><span class="color-swatch-circle" style="background:#E8D8C2;"></span><span class="color-swatch-name">Beige</span></div>
+                    <div class="color-swatch-item"><span class="color-swatch-circle" style="background:#535B39;"></span><span class="color-swatch-name">Olive Green</span></div>
+                    <div class="color-swatch-item"><span class="color-swatch-circle" style="background:#171717;"></span><span class="color-swatch-name">Black</span></div>
+                </div>
+            </div>
+
+            <div class="dress-code-note" data-en="Ladies are invited to wear elegant Merlot/Burgundy or Olive Green gowns. Gentlemen may choose Camel, Beige, Olive Green or a classic Black suit. Formal, coordinated looks are encouraged."
+                data-sw="Kina dada wanakaribishwa kuvaa gauni za Merlot/Burgundy au Olive Green. Kina kaka wanaweza kuvaa suti za Camel, Beige, Olive Green au Black. Mavazi rasmi yanayopendeza yanakaribishwa.">
+                Ladies are invited to wear elegant Merlot/Burgundy or Olive Green gowns. Gentlemen may choose Camel, Beige, Olive Green or a classic Black suit. Formal, coordinated looks are encouraged.
+            </div>
+
+            <div class="dress-editorial-container">
+                <article class="dress-look-card">
+                    <img src="https://thedesignerprecinct.com/cdn/shop/files/OLV0233-Burgundy-01.jpg?v=1790746981" alt="Elegant merlot burgundy formal gown" loading="lazy">
+                    <div class="dress-look-caption"><strong>MERLOT / BURGUNDY</strong><span data-en="Ladies' formal gowns" data-sw="Mavazi rasmi ya kina dada">Ladies' formal gowns</span></div>
+                </article>
+                <article class="dress-look-card">
+                    <img src="/female.jpeg" alt="Elegant olive green formal gown inspiration" loading="lazy">
+                    <div class="dress-look-caption"><strong>OLIVE GREEN</strong><span data-en="Ladies' formal gowns" data-sw="Mavazi rasmi ya kina dada">Ladies' formal gowns</span></div>
+                </article>
+                <article class="dress-look-card">
+                     <img src="/male1.jpeg" alt="Classic black formal men's suit" loading="lazy">
+                    <div class="dress-look-caption"><strong>CAMEL / OLIVE GREEN / BLACK</strong><span data-en="Tailored suits" data-sw="Suti zilizoshonwa vizuri">Tailored suits</span></div>
+                </article>
+                <article class="dress-look-card">
+                   
+                    <img src="/male2.jpeg" alt="Camel and beige tailored men's suit" loading="lazy">
+                    <div class="dress-look-caption"><strong>BEIGE / BLACK SUIT</strong><span data-en="Formal suits are welcome" data-sw="Suti rasmi zinakaribishwa">Formal suits are welcome</span></div>
+                </article>
             </div>
         </section>
 
         <!-- Section: Core Dynamic Family Acknowledgements -->
-        <section id="family-lineage-node">
+        {{-- <section id="family-lineage-node">
             <div class="section-header-block reveal">
                 <h2 data-en="With Boundless Joy" data-sw="Kwa Furaha Isiyo na Kifani">Kwa Furaha Isiyo na Kifani</h2>
             </div>
@@ -1783,7 +2029,7 @@
                         Eugen Tzan</p>
                 </div>
             </div>
-        </section>
+        </section> --}}
 
         <!-- Section: Automated RSVP Submission Interface Engine -->
         <section id="rsvp-viewport">
@@ -1929,22 +2175,31 @@
 
     <!-- Global Timeless Luxury Footer Architecture -->
     <footer>
-        <h2>Abel &amp; Anlin</h2>
-        <p data-en="05 &bull; SEPTEMBER &bull; 2026 — FOREVER ALIGNED"
-            data-sw="05 &bull; SEPTEMBA &bull; 2026 — UPENDO WA MILELE">05 &bull; SEPTEMBA &bull; 2026 — UPENDO WA
+        <h2>{{$event->groom_name}} &amp; {{$event->bride_name}}</h2>
+        
+        <p data-en="{{$eve}} — FOREVER ALIGNED"
+            data-sw="{{$eve}} UPENDO WA MILELE">{{$eve}} — UPENDO WA
             MILELE</p>
     </footer>
 
     <!-- --- CORE SYSTEM ARCHITECTURE CODE ENGINE --- -->
     <script>
+
+        // Sync toggle icon with the theme applied in <head>
+        document.addEventListener('DOMContentLoaded', function () {
+            const btn = document.getElementById('theme-toggle');
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            btn.innerHTML = `<i data-feather="${isDark ? 'sun' : 'moon'}"></i>`;
+            feather.replace();
+        });
         var data = @json($token ?? []);
         // console.log(data);
 
 
         if (data.rsvp_status == "Accepted") {
 
-            var image_url = data.url + '/' + data.event.app_name + '/cards/' + 'guest_' + data.id + '.png';
-            // console.log(image_url);
+            var image_url = '/' + data.event.app_name + '/cards/' + 'guest_' + data.id + '.png';
+            console.log(image_url);
             // return;
 
             finalizeSuccessfulRSVPUiState(image_url, "Accepted");
@@ -1998,8 +2253,8 @@
                 mmet: "A simple unexpected meeting that altered the trajectory of our separate timelines forever.",
                 mdate: "Hours melted like seconds under soft laughter, revealing matching patterns of soul and destiny.",
                 mprop: "Beneath an expansive canopy of light projections, a lifelong query received its infinite answer.",
-                flad: "Floor-length luxury gala attire, fluid textiles, or sophisticated luxury tailored sets.",
-                fgen: "Sharp luxury tailored black suits, elegant traditional wear, or clean premium tuxedos.",
+                flad: "Elegant formal gowns in Merlot/Burgundy or Olive Green.",
+                fgen: "Formal suits in Camel, Beige, Olive Green, or Black.",
                 freg: "Your physical presence tops our scale of appreciation. If you feel led to grace our start with token financial support, pathways are embedded below.",
                 fsucc: "Your data values have populated our database. Save your entry QR key token below."
             },
@@ -2007,8 +2262,8 @@
                 mmet: "Mkutano rahisi usiotarajiwa ambao ulibadilisha mwelekeo wa maisha yetu tofauti milele.",
                 mdate: "Masaa yalipita kama sekunde chini ya kicheko laini, ikionyesha mifumo inayolingana ya roho na hatima.",
                 mprop: "Chini ya dari kubwa ya makadirio ya mwanga, swali la maisha yote lilipata jibu lake lisilo na kikomo.",
-                flad: "Mavazi ya kifahari ya urefu wa sakafu, nguo zinazotiririka, au seti za kisasa zilizoshonwa vizuri.",
-                fgen: "Suti nyeusi za kisasa zilizoshonwa vizuri, mavazi ya kifahari ya kitamaduni, au tuxedo safi za malipo.",
+                flad: "Mavazi rasmi ya kifahari ya rangi ya Merlot/Burgundy au kijani cha Olive.",
+                fgen: "Suti rasmi za rangi ya Camel, Beige, kijani cha Olive, au nyeusi.",
                 freg: "Kuwepo kwako kimwili ndio kiwango chetu cha juu cha shukrani. Ukiongozwa kutubariki kwa msaada vya kifedha, njia zimewekwa hapa chini.",
                 fsucc: "Taarifa zako zimehifadhiwa kwenye mfumo wetu. Hifadhi alama yako ya usalama ya QR hapa chini."
             }
@@ -2023,7 +2278,7 @@
             initializeAmbientSpace();
             interceptUrlGuestParameter();
             executeDynamicScrollObservers();
-            initiateTargetCountdownEngine("2026-09-05T10:00:00");
+            initiateTargetCountdownEngine("2026-11-15T10:00:00");
             setupEventInteractions();
             triggerLanguageLoadSetup();
             loadExistingGuestResponse();
@@ -2045,7 +2300,7 @@
             const backgroundSpace = document.getElementById("ambient-particle-space");
 
             // Build Floating Petals
-            for (let i = 0; i < 12; i++) {
+            for (let i = 0; i < 24; i++) {
                 let petal = document.createElement("span");
                 petal.className = "petal";
                 petal.style.left = Math.random() * 100 + "vw";
@@ -2055,7 +2310,7 @@
                 backgroundSpace.appendChild(petal);
             }
             // Build Shimmering Gold Dust
-            for (let j = 0; j < 18; j++) {
+            for (let j = 0; j < 34; j++) {
                 let dust = document.createElement("span");
                 dust.className = "gold-dust";
                 dust.style.left = Math.random() * 100 + "vw";
@@ -2129,16 +2384,14 @@
         // --- THEME PROFILE MANAGER MATRIX ---
         const themeToggleBtn = document.getElementById("theme-toggle");
         themeToggleBtn.addEventListener("click", () => {
-            const currentProfileTheme = document.documentElement.getAttribute("data-theme");
-            if (currentProfileTheme === "dark") {
-                document.documentElement.removeAttribute("data-theme");
-                themeToggleBtn.innerHTML = `<i data-feather="moon"></i>`;
-            } else {
-                document.documentElement.setAttribute("data-theme", "dark");
-                themeToggleBtn.innerHTML = `<i data-feather="sun"></i>`;
-            }
+            const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+            const nextTheme = isDark ? "light" : "dark";
+            document.documentElement.setAttribute("data-theme", nextTheme);
+            try { localStorage.setItem("theme", nextTheme); } catch (e) {}
+            themeToggleBtn.innerHTML = `<i data-feather="${nextTheme === "dark" ? "sun" : "moon"}"></i>`;
             feather.replace();
         });
+
 
         // --- CHANGE RESPONSE ENGINE (re-opens the editable form over the curtain) ---
         // --- EVENT DELEGATION FOR CHANGE RESPONSE BUTTON ---
@@ -2375,7 +2628,7 @@ document.addEventListener("click", function (event) {
 
         //     document.getElementById("calendar-reminder-btn").onclick = () => {
         //         window.open(
-        //             "https://calendar.google.com/calendar/render?action=TEMPLATE&text=Abel+%26+Anlin+Wedding+Celebration&dates=20260905T100000Z/20260905T220000Z&details=Join+us+in+celebration+of+forever+alignment.&location=St.+Joseph&#39;s+Cathedral,+Dar+es+Salaam",
+        //             "https://calendar.google.com/calendar/render?action=TEMPLATE&text={{$event->groom_name}}+%26+{{$event->bride_name}}+Wedding+Celebration&dates=20260905T100000Z/20260905T220000Z&details=Join+us+in+celebration+of+forever+alignment.&location=St.+Joseph&#39;s+Cathedral,+Dar+es+Salaam",
         //             "_blank");
         //     };
         // }
@@ -2527,13 +2780,15 @@ document.addEventListener("click", function (event) {
 
 //             document.getElementById("calendar-reminder-btn").onclick = () => {
 //                 window.open(
-//                     "https://calendar.google.com/calendar/render?action=TEMPLATE&text=Abel+%26+Anlin+Wedding+Celebration&dates=20260905T100000Z/20260905T220000Z&details=Join+us+in+celebration+of+forever+alignment.&location=St.+Joseph&#39;s+Cathedral,+Dar+es+Salaam",
+//                     "https://calendar.google.com/calendar/render?action=TEMPLATE&text={{$event->groom_name}}+%26+{{$event->bride_name}}+Wedding+Celebration&dates=20260905T100000Z/20260905T220000Z&details=Join+us+in+celebration+of+forever+alignment.&location=St.+Joseph&#39;s+Cathedral,+Dar+es+Salaam",
 //                     "_blank");
 //             };
 //         }
 
 
 function finalizeSuccessfulRSVPUiState(base64ImageString, status) {
+    console.log(base64ImageString,status);
+    
     const successOverlay = document.getElementById("rsvp-success-curtain-layer");
     successOverlay.style.display = "flex";
 
@@ -2600,7 +2855,7 @@ function finalizeSuccessfulRSVPUiState(base64ImageString, status) {
 
     document.getElementById("calendar-reminder-btn").onclick = () => {
         window.open(
-            "https://calendar.google.com/calendar/render?action=TEMPLATE&text=Abel+%26+Anlin+Wedding+Celebration&dates=20260905T100000Z/20260905T220000Z&details=Join+us+in+celebration+of+forever+alignment.&location=St.+Joseph&#39;s+Cathedral,+Dar+es+Salaam",
+            "https://calendar.google.com/calendar/render?action=TEMPLATE&text={{$event->groom_name}}+%26+{{$event->bride_name}}+Wedding+Celebration&dates=20260905T100000Z/20260905T220000Z&details=Join+us+in+celebration+of+forever+alignment.&location=St.+Joseph&#39;s+Cathedral,+Dar+es+Salaam",
             "_blank");
     };
 }

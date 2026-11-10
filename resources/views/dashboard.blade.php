@@ -5,7 +5,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Anlin &amp; Abel · Invitation Suite</title>
+    <title>{{$event->groom_name}} &amp; {{$event->bride_name}} · Invitation Suite</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link
@@ -1505,7 +1505,7 @@
             <div class="brand">
                 <div class="seal"><i class="fa-solid fa-sparkles"></i></div>
                 <div>
-                    <div class="brand-name serif">Anlin &amp; Abel</div>
+                    <div class="brand-name serif">{{$event->groom_name}} &amp; {{$event->bride_name}}</div>
                     <div class="brand-sub">Invitation Suite</div>
                 </div>
             </div>
@@ -1533,7 +1533,7 @@
                 <div class="profile">
                     <div class="avatar">NR</div>
                     <div style="flex:1; min-width:0;">
-                        <div class="profile-name">Nadia Rahim</div>
+                        <div class="profile-name">Raphael Mkilya</div>
                         <div class="profile-role">Administrator</div>
                     </div>
                     <i class="fa-solid fa-arrow-right-from-bracket" style="color:var(--muted); font-size:14px;"></i>
@@ -1618,6 +1618,12 @@
                         <button class="btn btn-outline"><i class="fa-solid fa-download"></i>Export Excel</button>
                         <button class="btn btn-outline" id="bulk-generate-btn"
                             onclick="processBulkCardGenerationPipeline()"><i class="fa-solid fa-images"></i>Generate
+                            Cards</button>
+                        <button class="btn btn-danger" id="bulk-generate-btn"
+                            onclick="processBulkDeletePipeline()" style="background-color: red"><i class="fa-solid fa-trash"></i>Delete
+                            Cards</button>
+                        <button class="btn btn-danger" id="bulk-generate-btn"
+                            onclick="processBulkdownloadCardsPipeline()" style="background-color: cyan"><i class="fa-solid fa-download"></i>Download
                             Cards</button>
                         <button class="btn btn-gold"><i class="fa-solid fa-plus"></i>Add Guest</button>
                         <!-- Option A: Send to Selected Guests (uses checkboxes) -->
@@ -1893,7 +1899,7 @@
         <div class="drawer">
             <button class="drawer-close" onclick="closeDrawer()"><i class="fa-solid fa-xmark"></i></button>
             <div class="drawer-avatar" id="drawerAvatar">AW</div>
-            <div class="drawer-name serif" id="drawerName">Anlin Whitfield</div>
+            <div class="drawer-name serif" id="drawerName">{{$event->groom_name}} Whitfield</div>
             <div class="drawer-meta" id="drawerMeta">+255 712 334 210 · G-0142</div>
             <div class="pill-row" id="drawerPills"></div>
 
@@ -1989,7 +1995,7 @@
         let GUESTS = [];
         let guestsDataTableInstance = null;
         let rsvpDataTableInstance = null;
-        
+
         document.querySelectorAll(".guest-select-checkbox").forEach(cb => {
     cb.checked = selected.has(cb.dataset.id);
 });
@@ -2019,9 +2025,10 @@
                 }
 
                 renderGuests(GUESTS);
+                loadGuestsFromDatabase();
                 updateRsvpDependentUI();
-                notify("Sync Complete", `${GUESTS.length} guests synchronized live.`);
                 updates();
+                notify("Sync Complete", `${GUESTS.length} guests synchronized live.`);
             } catch (error) {
                 console.error(error);
                 notify("Sync Failed", "Using local backup registry.");
@@ -2053,6 +2060,7 @@
                     GUEST = LOCAL_GUEST_BACKUP;
                 } else {
                     GUEST = DATABASE_GUESTS.map(g => ({
+
                         // Map database column names safely to your UI keys
                         guest_code: g.guest_code || g.id || "",
                         guest_name: g.guest_name || g.name || "",
@@ -2079,6 +2087,7 @@
         }
 
         function updates() {
+            // GUESTS = [];
             // console.log('this');
 
             document.querySelector('.sh').textContent = GUESTS.length;
@@ -2170,7 +2179,7 @@
 
         function renderGuests(list) {
 
-            // console.log(list);
+
 
             const body = document.getElementById("guestTableBody");
             let base_url = @json($url);
@@ -2184,6 +2193,7 @@
                 const code = g.id || g.guest_code || "";
                 const name = g.guest_name || g.name || "";
                 const urls = base_url + code + '.png'
+                const rsvp = g.rsvp;
 
                 let display = 'block';
 
@@ -2191,7 +2201,7 @@
                     display = "none";
                 }
 
-                // console.log(g.rsvp+'-'+display);
+                console.log(g.guest_code);
 
 
 
@@ -2231,12 +2241,12 @@
     `;
             }).join("");
 
-            guestsDataTableInstance = new DataTable("#guestsTable", {
-                perPage: 10,
-                perPageSelect: [5, 10, 25, 50],
-                nextPrev: true,
-                firstLast: false
-            });
+            // guestsDataTableInstance = new DataTable("#guestsTable", {
+            //     perPage: 10,
+            //     perPageSelect: [5, 10, 25, 50],
+            //     nextPrev: true,
+            //     firstLast: false
+            // });
         }
 
         // function updateRsvpDependentUI() {
@@ -2374,7 +2384,7 @@
     <tr>
       <td style="font-weight: 600; color: var(--muted);">${index + 1}</td>
       <td class="guest-name">${g.guest?.guest_name || g.name || 'Unknown'}</td>
-      <td style="color: ${textColor}" class="pill-${color}">${pill(g.attendance || '—', rsvpTone(g.rsvp || ''))}</td>
+      <td style="color: ${textColor}" class="pill-${color}">${pill(g.rsvp || '—', rsvpTone(g.rsvp || ''))}</td>
       <td>${g.message || '-'}</td>
       <td style="text-align:right; color:var(--muted);">${formattedDateTime}</td>
     </tr>
@@ -2554,7 +2564,7 @@
             RED = "#C97C5D";
         const LOCAL_GUEST_BACKUP = [{
                 id: "G-0142",
-                name: "Anlin Whitfield",
+                name: "{{$event->groom_name}} Whitfield",
                 phone: "+255 712 334 210",
                 side: "Bride",
                 inv: "Sent",
@@ -2563,7 +2573,7 @@
             },
             {
                 id: "G-0143",
-                name: "Abel Mwakalinga",
+                name: "{{$event->bride_name}} Mwakalinga",
                 phone: "+255 754 981 002",
                 side: "Groom",
                 inv: "Sent",
@@ -3000,6 +3010,220 @@
                     btnBulk.disabled = false;
                 });
         }
+        function processBulkDeletePipeline() {
+            const selectedBoxes = document.querySelectorAll(".guest-select-checkbox:checked");
+            //console.log(selectedBoxes);
+
+
+            if (selectedBoxes.length === 0) {
+                notify("Selection Required", "Please choose at least one guest via checkboxes first.");
+                return;
+            }
+
+            const btnBulk = document.getElementById("bulk-generate-btn");
+            btnBulk.innerText = "PROCESSING BATCH...";
+            btnBulk.disabled = true;
+
+            // Extract JUST the array of token strings from the checkboxes
+            const selectedTokens = Array.from(selectedBoxes).map(box => box.getAttribute("data-code"));
+
+            // Package the exact layout expected by your backend checks
+            const bulkPayloadObject = {
+                guest_app: stats.app || "", // Extracted globally for the event lookups
+                guest_tokens: selectedTokens, // Array of token strings passed together
+                attendance: "Pending",
+                adults: "1",
+                children: "0",
+                messages: "Bulk generation pipeline"
+            };
+
+            const targetLaravelBackendUrl = "/deleteCards";
+
+            fetch(targetLaravelBackendUrl, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify(bulkPayloadObject) // Dispatched as a single cohesive object block
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error("Backend batch processing failure.");
+                    return response.json();
+                })
+                .then(data => {
+                    console.log("Bulk generation complete:", data);
+                    notify("Success", `Successfully processed invitation cards for selected guests!`);
+
+                    // Clear checkmarks on success
+                    selectedBoxes.forEach(box => box.checked = false);
+                    const masterCheckbox = document.getElementById("selectAllGuests");
+                    if (masterCheckbox) masterCheckbox.checked = false;
+                })
+                .catch(err => {
+                    console.error("Laravel processing error down layout line:", err);
+                    notify("Error", "Batch processing failed on the server.");
+                })
+                .finally(() => {
+                    // location.reload();
+                    btnBulk.innerHTML = '<i class="fa-solid fa-images"></i>Generate Cards';
+                    btnBulk.disabled = false;
+                });
+        }
+
+
+        function processBulkdownloadCardsPipeline() {
+
+    const selectedBoxes = document.querySelectorAll(
+        ".guest-select-checkbox:checked"
+    );
+
+    if (selectedBoxes.length === 0) {
+        notify(
+            "Selection Required",
+            "Please choose at least one guest via checkboxes first."
+        );
+        return;
+    }
+
+    const btnBulk = document.getElementById("bulk-generate-btn");
+
+    btnBulk.innerText = "PROCESSING BATCH...";
+    btnBulk.disabled = true;
+
+
+    // Get invitation tokens from selected checkboxes
+    const selectedTokens = Array.from(selectedBoxes).map(box =>
+        box.getAttribute("data-code")
+    );
+
+
+    const bulkPayloadObject = {
+        guest_app: stats.app || "",
+        guest_tokens: selectedTokens
+    };
+
+
+    const targetLaravelBackendUrl = "/downloadCards";
+
+
+    fetch(targetLaravelBackendUrl, {
+
+        method: "POST",
+
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRF-TOKEN": document
+                .querySelector('meta[name="csrf-token"]')
+                .getAttribute("content")
+        },
+
+        body: JSON.stringify(bulkPayloadObject)
+
+    })
+
+    .then(async response => {
+
+        if (!response.ok) {
+
+            // Try to get Laravel's JSON error
+            let errorMessage = "Backend batch processing failure.";
+
+            try {
+                const errorData = await response.json();
+
+                if (errorData.message) {
+                    errorMessage = errorData.message;
+                }
+
+            } catch (e) {
+                // Response wasn't JSON
+            }
+
+            throw new Error(errorMessage);
+        }
+
+
+        // IMPORTANT:
+        // Laravel is returning a ZIP, so use blob()
+        return response.blob();
+    })
+
+
+    .then(blob => {
+
+        console.log("ZIP generated successfully:", blob);
+
+
+        // Create temporary URL for ZIP
+        const downloadUrl = window.URL.createObjectURL(blob);
+
+
+        // Create temporary download link
+        const downloadLink = document.createElement("a");
+
+        downloadLink.href = downloadUrl;
+
+        downloadLink.download = "selected_cards.zip";
+
+
+        document.body.appendChild(downloadLink);
+
+        downloadLink.click();
+
+        downloadLink.remove();
+
+
+        // Clean up
+        window.URL.revokeObjectURL(downloadUrl);
+
+
+        notify(
+            "Success",
+            "Selected invitation cards downloaded successfully!"
+        );
+
+
+        // Clear checkboxes
+        selectedBoxes.forEach(box => {
+            box.checked = false;
+        });
+
+
+        const masterCheckbox =
+            document.getElementById("selectAllGuests");
+
+        if (masterCheckbox) {
+            masterCheckbox.checked = false;
+        }
+
+    })
+
+
+    .catch(err => {
+
+        console.error(
+            "Laravel processing error down layout line:",
+            err
+        );
+
+        notify(
+            "Error",
+            err.message || "Batch processing failed on the server."
+        );
+
+    })
+
+
+    .finally(() => {
+
+        btnBulk.innerHTML =
+            '<i class="fa-solid fa-images"></i> Download Cards';
+
+        btnBulk.disabled = false;
+
+    });
+}
 
         /* ============================================================
            BULK WHATSAPP SENDER - Add this to your script section

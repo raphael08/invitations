@@ -17,19 +17,15 @@ return new class extends Migration
 
             $table->foreignId('event_id')->constrained()->cascadeOnDelete();
 
-            $table->string('guest_code');
+            $table->string('guest_code')->nullable();
 
-            $table->string('guest_name');
+            $table->string('guest_name')->nullable();
 
             $table->string('phone')->nullable();
 
             $table->string('email')->nullable();
 
-            $table->enum('side', [
-                'Bride',
-                'Groom',
-                'Both'
-            ])->nullable();
+            $table->string('side')->nullable();
 
             $table->string('category')->nullable();
 
