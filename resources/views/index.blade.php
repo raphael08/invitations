@@ -2032,7 +2032,7 @@
         </section> --}}
 
         <!-- Section: Automated RSVP Submission Interface Engine -->
-        <section id="rsvp-viewport">
+        <section id="rsvp-viewport" style="display: none;">
             <div class="section-header-block reveal">
                 <h2 data-en="Attendance Confirmation" data-sw="Thibitisha Kuhudhuria">Thibitisha Kuhudhuria</h2>
                 <p data-en="Lock your designation seat inside our system registry"
@@ -2076,9 +2076,7 @@
                     </div>
 
                     <!-- Always available: lets the guest re-open the form and update their response -->
-                    {{-- <button type="button" class="gold-button" id="change-response-btn"
-                        style="margin-top: 25px;"><i data-feather="edit-2"></i>
-                        <span data-en="Change Response" data-sw="Badilisha Jibu">Change Response</span></button> --}}
+                    
                 </div>
 
                 <!-- Form Framework Target Element -->
@@ -2097,9 +2095,7 @@
                                 data-sw="Hali ya Kuhudhuria">Hali ya Kuhudhuria</label>
                             <div class="radio-group-status"
                                 style="display: flex; flex-direction: column; gap: 8px; margin: 12px 0;">
-                                {{-- <label style="font-size: 13px; font-weight: 500; margin-bottom: 4px;"
-                                    data-en="Attendance Status" data-sw="Hali ya Kuhudhuria">Hali ya
-                                    Kuhudhuria</label> --}}
+                               
 
                                 <label
                                     style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer;">
@@ -2130,11 +2126,7 @@
                             <label for="select-field-children" data-en="Children Under 10 Seats"
                                 data-sw="Idadi ya Watoto">Idadi ya Watoto</label>
                             <input type="number" required value="0" min="0" id="select-field-children">
-                            <!-- <select id="select-field-children">
-                                <option value="0">Hakuna</option>
-                                <option value="1">Mtoto 1</option>
-                                <option value="2">Watoto 2</option>
-                            </select> -->
+                          
                         </div>
                         <div class="rsvp-form-group" style="display: none;">
                             <label for="select-field-meal" data-en="Dietary Profile Selection"

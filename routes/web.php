@@ -8,6 +8,7 @@ use App\Models\Event;
 use App\Models\GoogleSheetSetting;
 Route::get('/', function () {
 
+
 // $guests = Guest::where('rsvp_status','Accepted')->get();
 
 // foreach( $guests as $guest ){
@@ -47,4 +48,5 @@ Route::get('/', function () {
  Route::get('/api/response/{token}', [AppController::class, 'response']);
  Route::post('/generate', [AppController::class, 'generate']);
  Route::post('/downloadCards', [AppController::class, 'downloadCards']);
+ Route::post('/deleteCards', [AppController::class, 'deleteCards']);
 

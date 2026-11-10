@@ -1552,7 +1552,7 @@
                 </div>
                 <div class="topbar-right">
                     <div class="search-box"><i class="fa-solid fa-magnifying-glass"
-                            style="color:var(--muted); font-size:13px;"></i><input placeholder="Search anything…" />
+                            style="color:var(--muted); font-size:13px;"></i><input id="globalSearch" placeholder="Search anything…" oninput="globalSearch(this.value)" />
                     </div>
                     <button class="icon-btn"><i class="fa-regular fa-bell" style="color:var(--charcoal-soft);"></i><span
                             class="dot"></span></button>
@@ -2020,9 +2020,11 @@
                         side: row[9]?.trim() || "Bride",
                         inv: row[9]?.trim() || "Sent",
                         rsvp: row[9]?.trim() || "Pending",
-                        date: row[9]?.trim() || "—"
+                        date: row[3]?.trim() || "—",
+                        amount: row[4]?.trim() || "—",
                     });
                 }
+
 
                 renderGuests(GUESTS);
                 loadGuestsFromDatabase();
@@ -2060,12 +2062,12 @@
                     GUEST = LOCAL_GUEST_BACKUP;
                 } else {
                     GUEST = DATABASE_GUESTS.map(g => ({
-
+                    // console.log(g);
                         // Map database column names safely to your UI keys
                         guest_code: g.guest_code || g.id || "",
                         guest_name: g.guest_name || g.name || "",
                         phone: g.phone || "—",
-                        // side: g.side || "Bride",
+                        side: g.side || "-",
                         inv: g.inv || g.invitation_status || "Sent",
                         rsvp: g.rsvp || g.rsvp_status || "Pending",
                         date: g.date || g.invited_at || "—",
@@ -2200,8 +2202,15 @@
                 if (g.rsvp !== "Accepted") {
                     display = "none";
                 }
+                if(g.side == 'S' || g.side == 'D'){
+                    g.side = 'Completed';
+                }else{
+                    g.side = 'Incomplete';
+                }
+                // console.log(g.side);
 
-                console.log(g.guest_code);
+
+                // console.log(g.guest_code);
 
 
 
@@ -2218,8 +2227,8 @@
         <td class="guest-name">${name}</td>
         <td>${g.phone}</td>
 
-        <td>${pill(g.inv, g.inv==="Sent" ? "green":"grey")}</td>
-        <td>${pill(g.rsvp, rsvpTone(g.rsvp))}</td>
+        <td>${pill(g.side, g.side==="Completed" ? "green":"grey")}</td>
+        <td>${pill(g.rsvp, g.rsvp==="Accepted" ? "green":"grey")}</td>
         <td>${g.date}</td>
         <td onclick="event.stopPropagation()">
           <div class="row-actions">
@@ -2241,12 +2250,12 @@
     `;
             }).join("");
 
-            // guestsDataTableInstance = new DataTable("#guestsTable", {
-            //     perPage: 10,
-            //     perPageSelect: [5, 10, 25, 50],
-            //     nextPrev: true,
-            //     firstLast: false
-            // });
+            // No DataTable for the guests list (no pagination wanted).
+            // Searching is done by filterGuests() directly on the table rows.
+            guestsDataTableInstance = null;
+
+            // Re-apply any text already typed in the search box after a re-render
+            filterGuests();
         }
 
         // function updateRsvpDependentUI() {
@@ -2409,10 +2418,47 @@
 
 
         function filterGuests() {
-            const val = document.getElementById("guestSearch").value;
-            if (guestsDataTableInstance) {
-                guestsDataTableInstance.search(val);
+            const input = document.getElementById("guestSearch");
+            const body = document.getElementById("guestTableBody");
+            if (!input || !body) return;
+
+            const q = input.value.trim().toLowerCase();
+            let visible = 0;
+
+            body.querySelectorAll("tr:not(.no-results-row)").forEach(tr => {
+                const match = !q || tr.textContent.toLowerCase().includes(q);
+                tr.style.display = match ? "" : "none";
+                if (match) visible++;
+            });
+
+            // "No results" row
+            let empty = body.querySelector(".no-results-row");
+            if (visible === 0 && q) {
+                if (!empty) {
+                    empty = document.createElement("tr");
+                    empty.className = "no-results-row";
+                    empty.innerHTML = '<td colspan="8" style="text-align:center; padding:24px; color:var(--muted);">No guests match your search.</td>';
+                    body.appendChild(empty);
+                }
+            } else if (empty) {
+                empty.remove();
             }
+        }
+
+        // Topbar "Search anything…" box: jumps to the Guests page and searches there
+        function globalSearch(val) {
+            val = val.trim();
+            const guestInput = document.getElementById("guestSearch");
+            if (!guestInput) return;
+            guestInput.value = val;
+            if (val) {
+                const guestsPage = document.getElementById("page-guests");
+                if (guestsPage && !guestsPage.classList.contains("active")) {
+                    const navBtn = document.querySelector('.nav-item[data-page="guests"]');
+                    if (navBtn) navBtn.click();
+                }
+            }
+            filterGuests();
         }
 
         /* ---------------- Drawer Management ---------------- */
@@ -2926,26 +2972,17 @@
         // }
 
         function toggleSelectAllGuests(master) {
-
-    if (master.checked) {
-
-        // Select ALL guests (all pages)
-        GUEST.forEach(g => {
-            selectedGuests.add(String(g.id || g.guest_code));
-        });
-
-    } else {
-
-        selectedGuests.clear();
-
-    }
-
-    // Check only the visible page
-    document.querySelectorAll(".guest-select-checkbox").forEach(cb => {
-        cb.checked = master.checked;
-    });
-
-}
+            // Only affect rows that are currently visible (respects the search filter)
+            document.querySelectorAll("#guestTableBody tr").forEach(tr => {
+                if (tr.style.display === "none") return;
+                const cb = tr.querySelector(".guest-select-checkbox");
+                if (!cb) return;
+                cb.checked = master.checked;
+                const id = String(cb.dataset.code);
+                if (master.checked) selectedGuests.add(id);
+                else selectedGuests.delete(id);
+            });
+        }
 
         // Processing interface layout architecture mapping structured array payloads
 

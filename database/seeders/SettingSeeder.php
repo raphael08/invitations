@@ -15,6 +15,6 @@ class SettingSeeder extends Seeder
     {
         //
 
-        Setting::create(['base_url'=>'https://rsvp.myvnc.com']);
+        Setting::create(['base_url'=>'https://raphael08.github.io/invitation/']);
     }
 }

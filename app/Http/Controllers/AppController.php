@@ -25,14 +25,14 @@ class AppController extends Controller
         $event = Event::where('app_name', $app)->firstOrFail();
         // dd($event);
 
-        $guests = Guest::with('response')->where('event_id', $event->id)->get();
+        $guests = Guest::with('response')->where('event_id', $event->id)->orderBy('rsvp_status')->get();
         $guestIds = $guests->pluck('id')->toArray();
         $sheet = GoogleSheetSetting::where('event_id', $event->id)->first();
         $setting = Setting::first();
         $resp = Rsvp::with('guest')->whereIn('guest_id', $guestIds)
             ->latest() // Orders by created_at DESC (or latest ID)
             ->get()
-            ->unique('guest_id') // Keeps only the first (latest) item for each guest_id
+            ->unique('guest_id')
             ->values();
         // dd($guests,$resp);
 
@@ -65,6 +65,174 @@ class AppController extends Controller
         return view('dashboard', compact('event', 'setting', 'stats', 'guests', 'app', 'resp', 'sheet', 'url'));
     }
 
+    public function deleteCards(Request $request)
+{
+    DB::beginTransaction();
+
+    try {
+
+        $event = Event::where('app_name', $request->guest_app)->first();
+        $setting = Setting::first();
+
+        if (!$event) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Event not found.'
+            ], 404);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Get Guests
+        |--------------------------------------------------------------------------
+        */
+
+        if ($request->filled('guest_token')) {
+
+            // Single guest
+            $guests = Guest::where('event_id', $event->id)
+                ->where('invitation_token', $request->guest_token)
+                ->get([
+                    'id',
+                    'guest_name',
+                    'invitation_token'
+                ])
+                ->toArray();
+
+        } elseif ($request->filled('guest_tokens')) {
+
+            // Multiple guests
+            $guestIds = $request->guest_tokens;
+
+            $guests = Guest::where('event_id', $event->id)
+                ->whereIn('id', $guestIds)
+                ->get([
+                    'id',
+                    'guest_name',
+                    'invitation_token'
+                ])
+                ->toArray();
+
+        } else {
+
+            // All guests
+            $guests = Guest::where('event_id', $event->id)
+                ->get([
+                    'id',
+                    'guest_name',
+                    'invitation_token'
+                ])
+                ->toArray();
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Add app and URL information
+        |--------------------------------------------------------------------------
+        */
+
+        foreach ($guests as &$guest) {
+
+            $guest['app'] = $request->guest_app;
+            $guest['url'] = $setting->base_url;
+        }
+
+        unset($guest);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Delete Only Selected Guest Cards
+        |--------------------------------------------------------------------------
+        |
+        | Files are stored as:
+        |
+        | public/aa/cards/guest_1.png
+        | public/aa/cards/guest_2.png
+        | public/aa/cards/guest_3.png
+        |
+        |--------------------------------------------------------------------------
+        */
+
+        $folder = public_path($request->guest_app . '/cards');
+
+        foreach ($guests as $guest) {
+
+            $filePath = $folder . '/guest_' . $guest['id'] . '.png';
+
+            if (File::exists($filePath)) {
+                File::delete($filePath);
+            }
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Update RSVP Information
+        |--------------------------------------------------------------------------
+        */
+
+        foreach ($guests as $guest) {
+
+            Guest::where('id', $guest['id'])
+                ->update([
+                    'rsvp_status' => $request->attendance,
+                ]);
+
+            $check = Rsvp::where('guest_id', $guest['id'])
+                ->latest()
+                ->first();
+
+            if ($check) {
+
+                $check->update([
+                    'attendance'   => $request->attendance,
+                    'adults'       => $request->adults,
+                    'children'     => $request->children,
+                    'message'      => $request->message,
+                    'submitted_at' => now(),
+                ]);
+
+            } else {
+
+                Rsvp::create([
+                    'guest_id'     => $guest['id'],
+                    'attendance'   => $request->attendance,
+                    'adults'       => $request->adults,
+                    'children'     => $request->children,
+                    'message'      => $request->message,
+                    'submitted_at' => now(),
+                ]);
+            }
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Commit Transaction
+        |--------------------------------------------------------------------------
+        */
+
+        DB::commit();
+
+        return response()->json([
+            'success' => true,
+            'guests'  => $guests,
+            'message' => 'Guest card(s) deleted successfully.'
+        ]);
+
+    } catch (\Exception $e) {
+
+        DB::rollBack();
+
+        return response()->json([
+            'success'   => false,
+            'statusCode'=> 500,
+            'message'   => $e->getMessage()
+        ], 500);
+    }
+}
+
     public function sync_guest(Request $request, $app)
     {
         DB::beginTransaction();
@@ -90,11 +258,28 @@ class AppController extends Controller
                     }
                     $guest['event_id'] = $event->id;
                     $guest['invitation_token'] = $invitation_token;
+                   if(isset($guest['date']) && $guest['date'] != null ){
+
+                         if((int) str_replace(',', '', $guest['date']) > 100000 && (int) str_replace(',', '', $guest['amount']) == 0){
+
+                            $guest['side'] = 'D';
+
+                        }else if((int) str_replace(',', '', $guest['date']) == 0 || (int) str_replace(',', '', $guest['amount']) > 0 || (int) str_replace(',', '', $guest['date']) <  50000){
+                            $guest['side'] = NULL;
+                        }
+                        else{
+
+                            $guest['side'] = 'S';
+                        }
+                   }
+
                     Guest::create($guest);
                 }
                 $id = Guest::find($guest['guest_code']);
+                // dd($guest['guest_name'],$request->guest_name,$id->phone);
+                $guest['guest_name'] = $guest['guest_name'];
                 if ($check && $guest['phone'] && $id && !$id->phone) {
-                    // dd($guest['phone']);
+                    // dd($guest['phone'],$guest['date']);
 
                     // $invitation_token = Guest::generateCode(10);
                     if (strpos($guest['phone'], '0') === 0) {
@@ -103,12 +288,29 @@ class AppController extends Controller
                         $guest['phone'] = substr_replace($guest['phone'], '255', 0, 1);
                     }
 
+                }
+                // dd($guest['date']);
 
+                if($check && isset($guest['date']) && $guest['date'] != null ){
+
+                        if((int) str_replace(',', '', $guest['date']) > 100000 && (int) str_replace(',', '', $guest['amount']) == 0){
+
+                            $guest['side'] = 'D';
+
+                        }else if((int) str_replace(',', '', $guest['date']) == 0 || (int) str_replace(',', '', $guest['amount']) > 0 || (int) str_replace(',', '', $guest['date']) <  50000){
+                            $guest['side'] = NULL;
+                        }
+                        else{
+
+                            $guest['side'] = 'S';
+                        }
+
+                    }
+                    // dd($guest);
 
                     if ($id) {
                         $id->update($guest);
                     }
-                }
             }
 
             DB::commit();
@@ -135,6 +337,8 @@ class AppController extends Controller
         DB::beginTransaction();
         try {
             // dd('this');
+
+
             $event = Event::where('app_name', $app)->first();
             // dd($event);
 
@@ -173,11 +377,12 @@ class AppController extends Controller
         }
     }
 
-    
+
 public function generate(Request $request)
 {
+    $tmpFile = null;
+
     try {
-        // Get event and settings
         $event = Event::where('app_name', $request->guest_app)->first();
         $setting = Setting::first();
 
@@ -200,25 +405,27 @@ public function generate(Request $request)
 
             $guests = Guest::where('event_id', $event->id)
                 ->where('invitation_token', $request->guest_token)
-                ->get(['id', 'guest_name', 'invitation_token'])
+                ->get(['id', 'guest_name', 'invitation_token', 'side'])
                 ->toArray();
 
         } elseif ($request->filled('guest_tokens')) {
 
             $tokens = Guest::where('event_id', $event->id)
                 ->whereIn('guest_code', (array) $request->guest_tokens)
+                ->whereNotNull('side')
+                ->where('rsvp_status', 'Pending')
                 ->pluck('invitation_token')
                 ->toArray();
 
             $guests = Guest::where('event_id', $event->id)
                 ->whereIn('invitation_token', $tokens)
-                ->get(['id', 'guest_name', 'invitation_token'])
+                ->get(['id', 'guest_name', 'invitation_token', 'side'])
                 ->toArray();
 
         } else {
 
             $guests = Guest::where('event_id', $event->id)
-                ->get(['id', 'guest_name', 'invitation_token'])
+                ->get(['id', 'guest_name', 'invitation_token', 'side'])
                 ->toArray();
         }
 
@@ -230,33 +437,30 @@ public function generate(Request $request)
         }
 
         // Add application details to each guest
+        $url = $setting->base_url;
+        $code = Guest::where('event_id', $event->id)->value('invitation_token');
+
         foreach ($guests as &$guest) {
             $guest['app'] = $request->guest_app;
-            $guest['url'] = $setting->base_url;
+            $guest['url'] = $url;
+            $guest['code'] = $code;
         }
         unset($guest);
 
         // Detect operating system and select Python executable
         if (PHP_OS_FAMILY === 'Linux') {
-
             $python = base_path('.venv/bin/python');
-
         } elseif (PHP_OS_FAMILY === 'Windows') {
-
             $python = base_path('.venv-win\\Scripts\\python.exe');
-
         } else {
-
             return response()->json([
                 'success' => false,
                 'error' => 'Unsupported operating system: ' . PHP_OS_FAMILY,
             ], 500);
         }
 
-        // Python script location
         $script = base_path('python/generate_cards.py');
 
-        // Check Python executable
         if (!file_exists($python)) {
             return response()->json([
                 'success' => false,
@@ -264,7 +468,6 @@ public function generate(Request $request)
             ], 500);
         }
 
-        // Check Python script
         if (!file_exists($script)) {
             return response()->json([
                 'success' => false,
@@ -272,7 +475,7 @@ public function generate(Request $request)
             ], 500);
         }
 
-        // Prepare JSON input for Python
+        // Encode guest data
         $jsonGuests = json_encode(
             $guests,
             JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
@@ -285,30 +488,36 @@ public function generate(Request $request)
             ], 500);
         }
 
-        // Execute Python script
+        // Write JSON to a temp file instead of passing it as an argument
+        $tmpFile = tempnam(sys_get_temp_dir(), 'guests_');
+
+        if ($tmpFile === false || file_put_contents($tmpFile, $jsonGuests) === false) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to write temporary guest data file.',
+            ], 500);
+        }
+
+        // Execute Python script with the FILE PATH
         $process = new Process([
             $python,
             $script,
-            $jsonGuests,
+            $tmpFile,
         ]);
 
         $process->setTimeout(null);
         $process->run();
 
-        // Check Python execution result
         if (!$process->isSuccessful()) {
             return response()->json([
                 'success' => false,
-                'error' => $process->getErrorOutput()
-                    ?: 'Python execution failed.',
+                'error' => $process->getErrorOutput() ?: 'Python execution failed.',
                 'output' => $process->getOutput(),
                 'exit_code' => $process->getExitCode(),
             ], 500);
         }
 
-        // Decode Python JSON output
         $output = trim($process->getOutput());
-
         $generated = json_decode($output, true);
 
         if (json_last_error() !== JSON_ERROR_NONE || !is_array($generated)) {
@@ -319,7 +528,6 @@ public function generate(Request $request)
             ], 500);
         }
 
-        // Ensure Python returned generated cards
         if (empty($generated)) {
             return response()->json([
                 'success' => false,
@@ -338,10 +546,9 @@ public function generate(Request $request)
             Guest::where('id', $card['id'])
                 ->where('event_id', $event->id)
                 ->update([
-                    'rsvp_status' => $request->attendance,
+                    'rsvp_status' => 'Pending',
                 ]);
 
-            // Find the latest RSVP record for this guest
             $check = Rsvp::where('guest_id', $card['id'])
                 ->latest()
                 ->first();
@@ -355,11 +562,8 @@ public function generate(Request $request)
             ];
 
             if ($check) {
-
                 $check->update($rsvpData);
-
             } else {
-
                 Rsvp::create(array_merge(
                     ['guest_id' => $card['id']],
                     $rsvpData
@@ -367,7 +571,6 @@ public function generate(Request $request)
             }
         }
 
-        // Return successful response
         return response()->json([
             'success' => true,
             'generated' => $generated,
@@ -375,13 +578,18 @@ public function generate(Request $request)
 
     } catch (\Throwable $e) {
 
-        // Handle unexpected errors
         return response()->json([
             'success' => false,
             'error' => $e->getMessage(),
             'file' => config('app.debug') ? $e->getFile() : null,
             'line' => config('app.debug') ? $e->getLine() : null,
         ], 500);
+
+    } finally {
+        // Always clean up the temp file
+        if ($tmpFile && file_exists($tmpFile)) {
+            @unlink($tmpFile);
+        }
     }
 }
 
@@ -436,6 +644,7 @@ public function generate(Request $request)
 
             $guests = Guest::where('event_id', $event->id)
                 ->where('invitation_token', $request->guest_token)
+                  ->where('side', '!=', null)
                 ->get([
                     'id',
                     'guest_name',
@@ -446,6 +655,7 @@ public function generate(Request $request)
 
             $guests = Guest::where('event_id', $event->id)
                 ->whereIn('guest_code', $request->guest_tokens)
+                  ->where('side', '!=', null)
                 ->get([
                     'id',
                     'guest_name',
@@ -455,6 +665,7 @@ public function generate(Request $request)
         } else {
 
             $guests = Guest::where('event_id', $event->id)
+              ->where('side', '!=', null)
                 ->get([
                     'id',
                     'guest_name',
@@ -612,6 +823,14 @@ public function generate(Request $request)
             ], 404);
         }
 
+
+        foreach ($guests as $guest) {
+            Guest::where('id', $guest['id'])
+                ->where('event_id', $event->id)
+                ->update([
+                    'rsvp_status' => 'Accepted',
+                ]);
+        }
 
         /*
         |--------------------------------------------------------------------------

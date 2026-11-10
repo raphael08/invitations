@@ -20,8 +20,9 @@ return new class extends Migration
             $table->enum('attendance', [
                 'Accepted',
                 'Declined',
-                'Maybe'
-            ]);
+                'Maybe',
+                'Pending'
+            ])->default('Pending');
 
             $table->integer('adults')->default(1);
 

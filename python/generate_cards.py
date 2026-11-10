@@ -12,37 +12,25 @@ import re
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_DIR = os.path.dirname(BASE_DIR)
 
-TEMPLATE = os.path.join(BASE_DIR, "template.png")
+TEMPLATE_D = os.path.join(BASE_DIR, "template1.png")
+TEMPLATE_S = os.path.join(BASE_DIR, "template2.png")
 FONT_PATH = os.path.join(BASE_DIR, "BASKVILL.ttf")
-
 PUBLIC_FOLDER = os.path.join(PROJECT_DIR, "public")
 
 # ==========================================
 # SETTINGS
 # ==========================================
 
-# NAME_Y = 634
-
-# NAME_LINE_START_X = 319
-# NAME_LINE_END_X = 634
-
-# QR_X = 422
-# QR_Y = 1172
-# QR_SIZE = 170
-
-NAME_Y = 450
-
-# Start and end of the name line
+NAME_Y = 545
 NAME_LINE_START_X = 318
 NAME_LINE_END_X = 680
 
-# QR position
-QR_X = 220
-QR_Y = 870
+QR_X = 465
+QR_Y = 1300
 QR_SIZE = 90
 
 # ==========================================
-# RECEIVE DATA
+# RECEIVE DATA (from a file path)
 # ==========================================
 
 if len(sys.argv) < 2:
@@ -50,9 +38,23 @@ if len(sys.argv) < 2:
         "success": False,
         "message": "No guest data received."
     }))
-    sys.exit()
+    sys.exit(1)
 
-guests = json.loads(sys.argv[1])
+arg = sys.argv[1]
+
+try:
+    if os.path.isfile(arg):
+        with open(arg, "r", encoding="utf-8") as f:
+            guests = json.load(f)
+    else:
+        # fallback: argument is raw JSON
+        guests = json.loads(arg)
+except Exception as e:
+    print(json.dumps({
+        "success": False,
+        "message": f"Could not read guest data: {e}"
+    }))
+    sys.exit(1)
 
 generated = []
 
@@ -60,19 +62,16 @@ generated = []
 # GENERATE
 # ==========================================
 
-# ==========================================
-# GENERATE
-# ==========================================
-
-# Handle both JSON array lists or associative object dictionary variations defensively
 guest_rows = guests.values() if isinstance(guests, dict) else guests
 
-# print(guest_rows)
 for row in guest_rows:
 
-    # Safely bypass any metadata properties that are not actual guest objects
+    # Skip anything that isn't a real guest object
     if not isinstance(row, dict) or "id" not in row or "guest_name" not in row:
         continue
+
+    # Pick template by side (safe if "side" is missing)
+    template_path = TEMPLATE_S if row.get("side") == "S" else TEMPLATE_D
 
     guest_id = row["id"]
     guest_name = row["guest_name"].strip()
@@ -80,36 +79,14 @@ for row in guest_rows:
     # Remove unsafe characters from folder name
     app = re.sub(r'[^a-zA-Z0-9_-]', '', row["app"])
 
-    invitation_code = (
-        row["url"].rstrip("/")
-        + "/"
-        + app
-        + "/"
-        + row["invitation_token"]
-    )
+    invitation_code = row["url"].rstrip("/")
 
-    folder = os.path.join(
-        PUBLIC_FOLDER,
-        app,
-        "cards"
-    )
-
-    # Create public/{app}/cards
+    folder = os.path.join(PUBLIC_FOLDER, app, "cards")
     os.makedirs(folder, exist_ok=True)
 
     filename = f"guest_{guest_id}.png"
-
-    output_file = os.path.join(
-        folder,
-        filename
-    )
-
-    image_url = (
-        "/"
-        + app
-        + "/cards/"
-        + filename
-    )
+    output_file = os.path.join(folder, filename)
+    image_url = "/" + app + "/cards/" + filename
 
     # ==========================================
     # CREATE QR
@@ -136,30 +113,16 @@ for row in guest_rows:
     # OPEN TEMPLATE
     # ==========================================
 
-    card = Image.open(TEMPLATE).convert("RGB")
-
+    card = Image.open(template_path).convert("RGB")
     draw = ImageDraw.Draw(card)
 
-    available_width = (
-        NAME_LINE_END_X -
-        NAME_LINE_START_X
-    )
+    available_width = NAME_LINE_END_X - NAME_LINE_START_X
 
     font_size = 34
 
     while font_size >= 18:
-
-        font = ImageFont.truetype(
-            FONT_PATH,
-            font_size
-        )
-
-        bbox = draw.textbbox(
-            (0, 0),
-            guest_name,
-            font=font
-        )
-
+        font = ImageFont.truetype(FONT_PATH, font_size)
+        bbox = draw.textbbox((0, 0), guest_name, font=font)
         text_width = bbox[2] - bbox[0]
 
         if text_width <= available_width:
@@ -167,10 +130,7 @@ for row in guest_rows:
 
         font_size -= 1
 
-    name_x = (
-        NAME_LINE_START_X +
-        ((available_width - text_width) // 2)
-    )
+    name_x = NAME_LINE_START_X + ((available_width - text_width) // 2)
 
     draw.text(
         (name_x, NAME_Y),
@@ -179,11 +139,7 @@ for row in guest_rows:
         font=font
     )
 
-    card.paste(
-        qr_img,
-        (QR_X, QR_Y)
-    )
-
+    card.paste(qr_img, (QR_X, QR_Y))
     card.save(output_file)
 
     generated.append({
